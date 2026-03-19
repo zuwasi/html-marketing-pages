@@ -1,0 +1,2200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Coding Tools Security Comparison — CISO Enterprise Readiness Assessment</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  /* Password Gate */
+  .password-gate {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 99999;
+    background: #050B18;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  .password-gate.hidden { display: none; }
+
+  .password-gate .gate-box {
+    background: #111D33;
+    border: 1px solid #1A2D48;
+    border-radius: 16px;
+    padding: 48px;
+    text-align: center;
+    max-width: 440px;
+    width: 90%;
+    box-shadow: 0 0 80px rgba(0, 191, 255, 0.08);
+  }
+
+  .password-gate .gate-box img {
+    height: 80px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    box-shadow: 0 0 40px rgba(226, 30, 38, 0.25);
+  }
+
+  .password-gate .gate-box h2 {
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    color: #FFFFFF;
+  }
+
+  .password-gate .gate-box p {
+    font-size: 13px;
+    color: #5A7A9A;
+    margin-bottom: 28px;
+  }
+
+  .password-gate .gate-input {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid #1A2D48;
+    background: #0A1628;
+    color: #FFFFFF;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 16px;
+  }
+
+  .password-gate .gate-input:focus {
+    border-color: rgba(0, 191, 255, 0.5);
+    box-shadow: 0 0 16px rgba(0, 191, 255, 0.1);
+  }
+
+  .password-gate .gate-input.error {
+    border-color: rgba(226, 30, 38, 0.6);
+    box-shadow: 0 0 16px rgba(226, 30, 38, 0.1);
+  }
+
+  .password-gate .gate-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, #00BFFF, #0080FF);
+    color: #FFFFFF;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .password-gate .gate-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(0, 191, 255, 0.3);
+  }
+
+  .password-gate .gate-error {
+    color: #FF6B6B;
+    font-size: 12px;
+    margin-top: 12px;
+    min-height: 18px;
+  }
+
+  .password-gate .gate-badge {
+    display: inline-block;
+    padding: 4px 14px;
+    background: rgba(226, 30, 38, 0.15);
+    border: 1px solid rgba(226, 30, 38, 0.3);
+    border-radius: 16px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #FF6B6B;
+    margin-bottom: 24px;
+  }
+
+  .app-content { display: none; }
+  .app-content.visible { display: contents; }
+
+  :root {
+    --bg-primary: #050B18;
+    --bg-slide: #0A1628;
+    --bg-card: #111D33;
+    --accent-red: #E21E26;
+    --accent-cyan: #00BFFF;
+    --accent-green: #00E676;
+    --accent-yellow: #FFD700;
+    --accent-orange: #FF9100;
+    --text-primary: #FFFFFF;
+    --text-secondary: #A0B4CC;
+    --text-muted: #5A7A9A;
+    --border: #1A2D48;
+    --gradient-red: linear-gradient(135deg, #E21E26, #FF4444);
+    --gradient-cyan: linear-gradient(135deg, #00BFFF, #0080FF);
+    --gradient-green: linear-gradient(135deg, #00E676, #00C853);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    overflow: hidden;
+    height: 100%;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    overflow: hidden;
+    height: 100%;
+  }
+
+  /* Horizontal Slide Deck */
+  .slides-wrapper {
+    display: flex;
+    height: 100vh;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+  }
+
+  /* Arrow Navigation */
+  .arrow-btn {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2000;
+    background: rgba(0, 191, 255, 0.1);
+    border: 1px solid rgba(0, 191, 255, 0.25);
+    color: var(--accent-cyan);
+    font-size: 36px;
+    width: 64px;
+    height: 80px;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s;
+    backdrop-filter: blur(12px);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .arrow-btn:hover {
+    background: rgba(0, 191, 255, 0.22);
+    border-color: rgba(0, 191, 255, 0.5);
+    color: #fff;
+    transform: translateY(-50%) scale(1.08);
+    box-shadow: 0 0 30px rgba(0, 191, 255, 0.2);
+  }
+
+  .arrow-btn:active {
+    transform: translateY(-50%) scale(0.96);
+  }
+
+  .arrow-btn.disabled {
+    opacity: 0.15;
+    pointer-events: none;
+  }
+
+  .arrow-left { left: 18px; }
+  .arrow-right { right: 18px; }
+
+  /* Slide Counter */
+  .slide-counter {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(5, 11, 24, 0.85);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    padding: 8px 20px;
+  }
+
+  .slide-counter-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+
+  .slide-counter-text .current {
+    color: var(--accent-cyan);
+    font-size: 16px;
+  }
+
+  .slide-dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .slide-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+
+  .slide-dot.active {
+    background: var(--accent-cyan);
+    box-shadow: 0 0 8px rgba(0, 191, 255, 0.5);
+    transform: scale(1.3);
+  }
+
+  .slide-dot:hover:not(.active) {
+    background: var(--text-muted);
+  }
+
+  /* Navigation */
+  .nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: rgba(5, 11, 24, 0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .nav-brand img {
+    height: 36px;
+    width: auto;
+    border-radius: 6px;
+  }
+
+  .nav-brand-text {
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.3px;
+  }
+
+  .nav-brand-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 400;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 6px;
+    list-style: none;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .nav-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .nav-links a:hover {
+    color: var(--text-primary);
+    background: rgba(0, 191, 255, 0.1);
+  }
+
+  /* Slide System */
+  .slide {
+    min-width: 100vw;
+    width: 100vw;
+    height: 100vh;
+    padding: 100px 100px 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex-shrink: 0;
+  }
+
+  .slide::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(0, 191, 255, 0.03) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(226, 30, 38, 0.02) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .slide-number {
+    position: absolute;
+    top: 90px;
+    right: 60px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .slide-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Title Slide */
+  .title-slide {
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .title-slide .logo-container {
+    margin-bottom: 40px;
+  }
+
+  .title-slide .logo-container img {
+    height: 120px;
+    width: auto;
+    border-radius: 16px;
+    box-shadow: 0 0 60px rgba(226, 30, 38, 0.3), 0 0 120px rgba(0, 191, 255, 0.15);
+  }
+
+  .title-slide h1 {
+    font-size: 48px;
+    font-weight: 900;
+    letter-spacing: -1.5px;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #FFFFFF, #A0B4CC);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.15;
+  }
+
+  .title-slide .subtitle {
+    font-size: 20px;
+    color: var(--accent-cyan);
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+
+  .title-slide .meta {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 30px;
+    line-height: 2;
+  }
+
+  .classification-badge {
+    display: inline-block;
+    padding: 6px 20px;
+    background: rgba(226, 30, 38, 0.15);
+    border: 1px solid rgba(226, 30, 38, 0.4);
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #FF6B6B;
+    margin-top: 20px;
+  }
+
+  /* Section Headers */
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent-cyan);
+    margin-bottom: 12px;
+  }
+
+  h2 {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+    line-height: 1.2;
+  }
+
+  h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+  }
+
+  .slide-intro {
+    font-size: 16px;
+    color: var(--text-secondary);
+    max-width: 700px;
+    margin-bottom: 40px;
+    line-height: 1.7;
+  }
+
+  /* Cards Grid */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card:hover {
+    border-color: rgba(0, 191, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  .card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+
+  .card-icon.red { background: rgba(226, 30, 38, 0.15); }
+  .card-icon.cyan { background: rgba(0, 191, 255, 0.15); }
+  .card-icon.green { background: rgba(0, 230, 118, 0.15); }
+  .card-icon.yellow { background: rgba(255, 215, 0, 0.15); }
+  .card-icon.orange { background: rgba(255, 145, 0, 0.15); }
+
+  .card h4 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--text-primary);
+  }
+
+  .card p, .card li {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  .card ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .card ul li {
+    padding: 4px 0;
+    padding-left: 18px;
+    position: relative;
+  }
+
+  .card ul li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--accent-green);
+    font-weight: 700;
+    font-size: 12px;
+  }
+
+  .card ul li.negative::before {
+    content: '✗';
+    color: #FF6B6B;
+  }
+
+  /* Status Badges */
+  .badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .badge-green { background: rgba(0, 230, 118, 0.15); color: var(--accent-green); border: 1px solid rgba(0, 230, 118, 0.3); }
+  .badge-cyan { background: rgba(0, 191, 255, 0.15); color: var(--accent-cyan); border: 1px solid rgba(0, 191, 255, 0.3); }
+  .badge-yellow { background: rgba(255, 215, 0, 0.15); color: var(--accent-yellow); border: 1px solid rgba(255, 215, 0, 0.3); }
+  .badge-red { background: rgba(226, 30, 38, 0.15); color: #FF6B6B; border: 1px solid rgba(226, 30, 38, 0.3); }
+  .badge-orange { background: rgba(255, 145, 0, 0.15); color: var(--accent-orange); border: 1px solid rgba(255, 145, 0, 0.3); }
+
+  /* Table */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 13px;
+  }
+
+  .data-table thead th {
+    text-align: left;
+    padding: 12px 16px;
+    background: rgba(0, 191, 255, 0.06);
+    border-bottom: 1px solid var(--border);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--accent-cyan);
+  }
+
+  .data-table tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(26, 45, 72, 0.5);
+    color: var(--text-secondary);
+    vertical-align: top;
+  }
+
+  .data-table tbody tr:hover td {
+    background: rgba(0, 191, 255, 0.03);
+  }
+
+  /* Risk Matrix */
+  .risk-matrix {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 20px;
+  }
+
+  .risk-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .risk-level {
+    min-width: 80px;
+    text-align: center;
+    padding: 6px 0;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .risk-low { background: rgba(0, 230, 118, 0.12); color: var(--accent-green); border: 1px solid rgba(0, 230, 118, 0.3); }
+  .risk-medium { background: rgba(255, 215, 0, 0.12); color: var(--accent-yellow); border: 1px solid rgba(255, 215, 0, 0.3); }
+  .risk-high { background: rgba(255, 145, 0, 0.12); color: var(--accent-orange); border: 1px solid rgba(255, 145, 0, 0.3); }
+  .risk-critical { background: rgba(226, 30, 38, 0.12); color: #FF6B6B; border: 1px solid rgba(226, 30, 38, 0.3); }
+
+  .risk-details h5 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .risk-details p {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* Warning Box */
+  .callout {
+    border-radius: 10px;
+    padding: 24px;
+    margin: 20px 0;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .callout-info {
+    background: rgba(0, 191, 255, 0.06);
+    border: 1px solid rgba(0, 191, 255, 0.2);
+  }
+
+  .callout-warn {
+    background: rgba(255, 215, 0, 0.06);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+  }
+
+  .callout-danger {
+    background: rgba(226, 30, 38, 0.06);
+    border: 1px solid rgba(226, 30, 38, 0.2);
+  }
+
+  .callout-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .callout-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  .callout-text strong {
+    color: var(--text-primary);
+  }
+
+  /* Two Column */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-top: 20px;
+  }
+
+  /* Reference Links */
+  .ref-link {
+    color: var(--accent-cyan);
+    text-decoration: none;
+    font-weight: 500;
+    border-bottom: 1px dotted rgba(0, 191, 255, 0.4);
+    transition: all 0.2s;
+  }
+
+  .ref-link:hover {
+    color: #66D9FF;
+    border-bottom-color: #66D9FF;
+  }
+
+  /* Checklist */
+  .checklist {
+    list-style: none;
+    padding: 0;
+  }
+
+  .checklist li {
+    padding: 10px 0;
+    padding-left: 32px;
+    position: relative;
+    font-size: 14px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(26, 45, 72, 0.4);
+    line-height: 1.6;
+  }
+
+  .checklist li::before {
+    content: '☐';
+    position: absolute;
+    left: 0;
+    font-size: 16px;
+    color: var(--accent-cyan);
+  }
+
+  /* Architecture Diagram */
+  .arch-diagram {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 30px;
+    margin: 16px 0;
+    text-align: center;
+  }
+
+  .arch-diagram h5 {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    color: var(--text-primary);
+  }
+
+  .arch-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 12px 0;
+  }
+
+  .arch-box {
+    padding: 14px 22px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    min-width: 140px;
+  }
+
+  .arch-box.client { background: rgba(0, 191, 255, 0.12); border: 1px solid rgba(0, 191, 255, 0.3); color: var(--accent-cyan); }
+  .arch-box.server { background: rgba(226, 30, 38, 0.12); border: 1px solid rgba(226, 30, 38, 0.3); color: #FF6B6B; }
+  .arch-box.provider { background: rgba(255, 215, 0, 0.12); border: 1px solid rgba(255, 215, 0, 0.3); color: var(--accent-yellow); }
+  .arch-box.infra { background: rgba(0, 230, 118, 0.12); border: 1px solid rgba(0, 230, 118, 0.3); color: var(--accent-green); }
+
+  .arch-arrow {
+    font-size: 20px;
+    color: var(--text-muted);
+  }
+
+  .arch-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+
+  /* Footer */
+  .slide-footer {
+    margin-top: auto;
+    padding-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  /* Compliance Grid */
+  .compliance-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin: 30px 0;
+  }
+
+  .compliance-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 16px;
+    text-align: center;
+    transition: all 0.3s;
+  }
+
+  .compliance-item:hover {
+    border-color: rgba(0, 230, 118, 0.3);
+    transform: translateY(-2px);
+  }
+
+  .compliance-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+  }
+
+  .compliance-name {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .compliance-status {
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* Responsibility Split */
+  .split-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 20px;
+  }
+
+  .split-col {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 28px;
+    border: 1px solid var(--border);
+  }
+
+  .split-col h4 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .split-col ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .split-col ul li {
+    padding: 8px 0;
+    padding-left: 24px;
+    position: relative;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    border-bottom: 1px solid rgba(26, 45, 72, 0.3);
+  }
+
+  .split-col ul li:last-child { border-bottom: none; }
+
+  .split-col.vendor ul li::before {
+    content: '🔒';
+    position: absolute;
+    left: 0;
+    font-size: 12px;
+  }
+
+  .split-col.customer ul li::before {
+    content: '⚠️';
+    position: absolute;
+    left: 0;
+    font-size: 12px;
+  }
+
+  /* Verdict Box */
+  .verdict-box {
+    background: var(--bg-card);
+    border: 2px solid rgba(0, 230, 118, 0.3);
+    border-radius: 16px;
+    padding: 30px;
+    text-align: center;
+    margin: 16px 0;
+  }
+
+  .verdict-box.conditional {
+    border-color: rgba(226, 30, 38, 0.4);
+  }
+
+  .verdict-box h3 {
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+
+  .verdict-box .verdict-score {
+    font-size: 48px;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+    margin: 12px 0;
+  }
+
+  .verdict-box.conditional .verdict-score {
+    background: linear-gradient(135deg, var(--accent-orange), var(--accent-red));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .verdict-box p {
+    color: var(--text-secondary);
+    font-size: 13px;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* Score cell colors */
+  .score-best { color: var(--accent-green); font-weight: 800; }
+  .score-good { color: var(--accent-green); font-weight: 700; }
+  .score-ok { color: var(--accent-yellow); font-weight: 700; }
+  .score-weak { color: var(--accent-orange); font-weight: 700; }
+  .score-bad { color: #FF6B6B; font-weight: 800; }
+
+  /* Print */
+  @media print {
+    .nav, .arrow-btn, .slide-counter { display: none; }
+    .slides-wrapper { display: block; transform: none !important; }
+    .slide { page-break-after: always; min-height: auto; height: auto; min-width: auto; width: auto; padding: 40px; overflow: visible; }
+    body, html { overflow: visible; height: auto; }
+    body { background: #fff; color: #000; }
+  }
+
+  /* Tablet */
+  @media (max-width: 1024px) {
+    .slide { padding: 90px 80px 80px; }
+    .cards-grid { grid-template-columns: repeat(2, 1fr); }
+    .compliance-grid { grid-template-columns: repeat(3, 1fr); }
+    .nav-links a { font-size: 11px; padding: 5px 8px; }
+    .slide-footer { flex-wrap: wrap; gap: 8px; }
+    .arrow-btn { width: 52px; height: 68px; font-size: 30px; }
+  }
+
+  /* Mobile landscape / small tablet */
+  @media (max-width: 768px) {
+    .slide { padding: 72px 60px 70px; }
+    .cards-grid, .two-col, .split-container, .risk-matrix { grid-template-columns: 1fr; }
+    .compliance-grid { grid-template-columns: repeat(3, 1fr); }
+    .nav-links { display: none; }
+    .nav { padding: 0 16px; height: 56px; }
+    .nav-brand img { height: 28px; }
+    .nav-brand-text { font-size: 15px; }
+    .nav-brand-sub { font-size: 10px; }
+    h2 { font-size: 26px; }
+    .title-slide h1 { font-size: 30px; }
+    .slide-intro { font-size: 14px; }
+    .slide-number { top: 62px; right: 60px; font-size: 10px; }
+    .slide-footer { flex-direction: column; gap: 6px; font-size: 10px; }
+    .arch-flow { flex-direction: column; gap: 8px; }
+    .arch-arrow { transform: rotate(90deg); }
+    .data-table { font-size: 11px; }
+    .data-table thead th { font-size: 10px; padding: 8px 10px; }
+    .data-table tbody td { padding: 8px 10px; }
+    .card { padding: 20px; }
+    .callout { flex-direction: column; gap: 10px; padding: 16px; }
+    .risk-item { flex-direction: column; gap: 10px; }
+    .risk-level { min-width: auto; width: fit-content; }
+    .verdict-box { padding: 24px 16px; }
+    .verdict-box .verdict-score { font-size: 40px; }
+    .checklist li { font-size: 13px; }
+    .arrow-btn { width: 44px; height: 60px; font-size: 26px; border-radius: 10px; }
+    .arrow-left { left: 8px; }
+    .arrow-right { right: 8px; }
+    .slide-counter { padding: 6px 14px; bottom: 14px; }
+    .slide-counter-text { font-size: 11px; }
+    .slide-counter-text .current { font-size: 13px; }
+    .slide-dot { width: 6px; height: 6px; }
+  }
+
+  /* Small mobile */
+  @media (max-width: 480px) {
+    .slide { padding: 66px 20px 60px; }
+    h2 { font-size: 22px; letter-spacing: -0.5px; }
+    .title-slide h1 { font-size: 24px; }
+    .title-slide .subtitle { font-size: 16px; }
+    .title-slide .meta { font-size: 12px; }
+    .title-slide .logo-container img { height: 80px; }
+    .section-label { font-size: 10px; letter-spacing: 2px; }
+    .compliance-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .compliance-item { padding: 16px 10px; }
+    .compliance-icon { font-size: 24px; }
+    .compliance-name { font-size: 12px; }
+    .card-icon { width: 36px; height: 36px; font-size: 16px; }
+    .card h4 { font-size: 15px; }
+    .card p, .card li { font-size: 12px; }
+    .data-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .classification-badge { font-size: 10px; padding: 5px 14px; }
+    .split-col ul li { font-size: 12px; }
+    .callout-text { font-size: 12px; }
+    .verdict-box .verdict-score { font-size: 36px; }
+    .verdict-box p { font-size: 12px; }
+    .arrow-btn { width: 38px; height: 52px; font-size: 22px; border-radius: 8px; }
+    .arrow-left { left: 4px; }
+    .arrow-right { right: 4px; }
+    .slide-dots { display: none; }
+    .slide-number { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Password Gate -->
+<div class="password-gate" id="passwordGate">
+  <div class="gate-box">
+    <img src="Ampcode.png" alt="Ampcode">
+    <div class="gate-badge">Confidential Document</div>
+    <h2>Authentication Required</h2>
+    <p>This CISO security assessment is restricted.<br>Enter the access password to continue.</p>
+    <input type="password" class="gate-input" id="gatePassword" placeholder="Enter password" autocomplete="off">
+    <button class="gate-btn" id="gateSubmit">Access Document</button>
+    <div class="gate-error" id="gateError"></div>
+  </div>
+</div>
+
+<!-- App Content (hidden until authenticated) -->
+<div class="app-content" id="appContent">
+
+<!-- Navigation -->
+<nav class="nav">
+  <div class="nav-brand">
+    <img src="Ampcode.png" alt="Ampcode Logo">
+    <div>
+      <div class="nav-brand-text">AI Coding Tools Security Comparison</div>
+      <div class="nav-brand-sub">CISO Assessment Report</div>
+    </div>
+  </div>
+  <ul class="nav-links">
+    <li><a onclick="goToSlide(0)">Overview</a></li>
+    <li><a onclick="goToSlide(1)">Summary</a></li>
+    <li><a onclick="goToSlide(2)">Compliance</a></li>
+    <li><a onclick="goToSlide(3)">Data</a></li>
+    <li><a onclick="goToSlide(4)">Infra</a></li>
+    <li><a onclick="goToSlide(5)">Auth</a></li>
+    <li><a onclick="goToSlide(6)">Audit</a></li>
+    <li><a onclick="goToSlide(7)">Secrets</a></li>
+    <li><a onclick="goToSlide(8)">CVEs</a></li>
+    <li><a onclick="goToSlide(9)">Architecture</a></li>
+    <li><a onclick="goToSlide(10)">Shared</a></li>
+    <li><a onclick="goToSlide(11)">Scores</a></li>
+    <li><a onclick="goToSlide(12)">Verdicts</a></li>
+  </ul>
+</nav>
+
+<!-- Arrow Navigation -->
+<button class="arrow-btn arrow-left disabled" id="arrowLeft" onclick="prevSlide()" aria-label="Previous slide">&#10094;</button>
+<button class="arrow-btn arrow-right" id="arrowRight" onclick="nextSlide()" aria-label="Next slide">&#10095;</button>
+
+<!-- Slide Counter -->
+<div class="slide-counter">
+  <div class="slide-counter-text"><span class="current" id="currentSlide">1</span> / <span id="totalSlides">14</span></div>
+  <div class="slide-dots" id="slideDots"></div>
+</div>
+
+<!-- Slides Wrapper -->
+<div class="slides-wrapper" id="slidesWrapper">
+
+<!-- SLIDE 1: Title -->
+<section class="slide title-slide" id="title">
+  <div class="slide-content">
+    <div class="logo-container">
+      <img src="Ampcode.png" alt="Ampcode">
+    </div>
+    <h1>AI Coding Tools<br>Security Comparison</h1>
+    <div class="subtitle">CISO-Level Enterprise Readiness Assessment</div>
+    <div style="font-size:16px; color:var(--text-secondary); margin-bottom:8px;">Ampcode vs Cursor vs Claude Code vs OpenAI Codex</div>
+    <p class="meta">
+      Prepared for: Chief Information Security Officer<br>
+      Assessment Date: March 19, 2026<br>
+      Classification: Internal — Restricted Distribution<br>
+      Scope: Comparative Security Analysis of Four AI Coding Agents
+    </p>
+    <div class="classification-badge">Confidential — Internal Use Only</div>
+  </div>
+  <div class="slide-footer">
+    <span>AI Coding Tools CISO Security Comparison 2026</span>
+    <span>Slide 1 of 13</span>
+  </div>
+</section>
+
+<!-- SLIDE 2: Executive Summary -->
+<section class="slide" id="summary">
+  <div class="slide-number">02 / 13</div>
+  <div class="slide-content">
+    <div class="section-label">Executive Summary</div>
+    <h2>Security Posture at a Glance</h2>
+    <p class="slide-intro">
+      Four AI coding tools evaluated across nine security dimensions. Each tool was assessed using publicly available documentation, trust portals, and CVE databases.
+    </p>
+
+    <div class="cards-grid">
+      <div class="card" style="border-left: 3px solid var(--accent-green);">
+        <div class="card-icon green">🛡️</div>
+        <h4>Ampcode <span style="color:var(--text-muted);font-weight:400;font-size:13px">Sourcegraph</span></h4>
+        <ul>
+          <li>SOC 2 + ISO 27001 + GDPR + CCPA + EU AI Act</li>
+          <li>Zero data retention on ALL LLMs (Enterprise)</li>
+          <li>Automatic secret redaction engine</li>
+          <li>SSO/SCIM with exclusive SSO mode</li>
+        </ul>
+        <br><span class="badge badge-green">APPROVED — 42/45</span>
+      </div>
+      <div class="card" style="border-left: 3px solid #FF6B6B;">
+        <div class="card-icon red">⚠️</div>
+        <h4>Cursor <span style="color:var(--text-muted);font-weight:400;font-size:13px">Anysphere</span></h4>
+        <ul>
+          <li class="negative">SOC 2 only — no ISO 27001</li>
+          <li class="negative">4 critical CVEs including CVSS 9.8 RCE</li>
+          <li class="negative">No built-in secret redaction engine</li>
+          <li class="negative">Extension sigs &amp; Workspace Trust off by default</li>
+        </ul>
+        <br><span class="badge badge-red">CONDITIONAL — 27/45</span>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--accent-green);">
+        <div class="card-icon cyan">🏛️</div>
+        <h4>Claude Code <span style="color:var(--text-muted);font-weight:400;font-size:13px">Anthropic</span></h4>
+        <ul>
+          <li>Most certifications: SOC2+ISO27001+ISO42001+HIPAA</li>
+          <li>FedRAMP High + NIST 800-171 + CSA STAR</li>
+          <li>CLI-local execution, sandboxed bash</li>
+          <li>Command blocklist + injection detection</li>
+        </ul>
+        <br><span class="badge badge-green">APPROVED — 38/45</span>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--accent-green);">
+        <div class="card-icon yellow">🔐</div>
+        <h4>OpenAI Codex <span style="color:var(--text-muted);font-weight:400;font-size:13px">OpenAI</span></h4>
+        <ul>
+          <li>SOC 2 + ISO 27001/27017/27018/27701 + PCI DSS</li>
+          <li>Cloud-sandboxed environments, 3 execution modes</li>
+          <li>Data residency in 10+ countries</li>
+          <li>Enterprise SSO/SCIM via ChatGPT Enterprise</li>
+        </ul>
+        <br><span class="badge badge-green">APPROVED — 40/45</span>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Assessment based on publicly available security documentation as of March 2026</span>
+    <span>Slide 2 of 13</span>
+  </div>
+</section>
+
+<!-- SLIDE 3: Compliance Comparison -->
+<section class="slide" id="compliance">
+  <div class="slide-number">03 / 13</div>
+  <div class="slide-content">
+    <div class="section-label">Compliance &amp; Certifications</div>
+    <h2>Certification Comparison Matrix</h2>
+    <p class="slide-intro">
+      Claude Code (Anthropic) holds the broadest compliance portfolio. Cursor holds only SOC 2 and acknowledges its security posture is still maturing.
+    </p>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Certification</th>
+          <th>Ampcode</th>
+          <th>Cursor</th>
+          <th>Claude Code</th>
+          <th>Codex</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>SOC 2 Type II</td>
+          <td><span class="badge badge-green">✓</span></td>
+          <td><span class="badge badge-green">✓</span></td>
+          <td><span class="badge badge-green">✓</span></td>
+          <td><span class="badge badge-green">✓</span></td>
+        </tr>
+        <tr>
+          <td>ISO/IEC 27001</td>
+          <td><span class="badge badge-green">✓</span></td>
+          <td><span class="badge badge-red">✗</span></td>
+          <td><span class="badge badge-green">✓</span></td>
+          <td><span class="badge badge-green">✓</span></td>
+        </tr>
+        <tr>
+          <td>ISO 42001 (AI Management)</td>
+          <td><span class="badge badge-red">✗</span></td>
+          <td><span class="badge badge-red">✗</span></td>
+          <td><span class="badge badge-green">✓</span></td>
+          <td><span class="badge badge-red">✗</span></td>
+        </tr>
+        <tr>
+          <td>ISO 27017 / 27018 / 27701</td>
+          <td><span class="badge badge-red">✗</span></td>
+          <td><span class="badge badge-red">✗</span></td>
+          <td><span class="badge badge-red">✗</span></td>
+          <td><span class="badge badge-green">✓</span></td>
+        </tr>
+        <tr>
+          <td>GDPR Compliant</td>
+          <td><span class="badge badge-green">✓</span></td>
+          <td><span class="badge badge-yellow">~</span></td>
+          <td><span class="badge badge-green">✓</span></td>
+          <td><span class="badge badge-green">✓</span></td>
+        </tr>
+        <tr>
+          <td>CCPA Compliant</td>
+          <td><span class="badge badge-green">✓</span></td>
+          <td><span class="badge badge-yellow">~</span></td>
+          <td><span class="badge badge-green">✓</span></td>
+          <td><span class="badge badge-green">✓</span></td>
+        </tr>
+        <tr>
+          <td>EU AI Act</td>
+          <td><span class="badge badge-green">✓</span></td>
+          <td><span class="badge badge-red">✗</span></td>
+          <td><span class="badge badge-red">✗</span></td>
+          <td><span class="badge badge-red">✗</span></td>
+        </tr>
+        <tr>
+          <td>HIPAA</td>
+          <td><span class="badge badge-red">✗</span></td>
+          <td><span class="badge badge-red">✗</span></td>
+          <td><span class="badge badge-green">✓</span></td>
+          <td><span class="badge badge-red">✗</span></td>
+        </tr>
+        <tr>
+          <td>FedRAMP High</td>
+          <td><span class="badge badge-red">✗</span></td>
+          <td><span class="badge badge-red">✗</span></td>
+          <td><span class="badge badge-green">✓</span></td>
+          <td><span class="badge badge-red">✗</span></td>
+        </tr>
+        <tr>
+          <td>NIST 800-171</td>
+          <td><span class="badge badge-red">✗</span></td>
+          <td><span class="badge badge-red">✗</span></td>
+          <td><span class="badge badge-green">✓</span></td>
+          <td><span class="badge badge-red">✗</span></td>
+        </tr>
+        <tr>
+          <td>CSA STAR</td>
+          <td><span class="badge badge-red">✗</span></td>
+          <td><span class="badge badge-red">✗</span></td>
+          <td><span class="badge badge-green">✓</span></td>
+          <td><span class="badge badge-red">✗</span></td>
+        </tr>
+        <tr>
+          <td>PCI DSS</td>
+          <td><span class="badge badge-red">✗</span></td>
+          <td><span class="badge badge-red">✗</span></td>
+          <td><span class="badge badge-red">✗</span></td>
+          <td><span class="badge badge-green">✓</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-warn" style="margin-top:20px">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-text">
+        <strong>Cursor Note:</strong> Anysphere's own documentation states they are <em>"still in the journey of growing our security posture."</em> This is reflected in their single SOC 2 certification with no additional compliance frameworks.
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Sources: Vendor trust portals and security documentation</span>
+    <span>Slide 3 of 13</span>
+  </div>
+</section>
+
+<!-- SLIDE 4: Data Retention & Training -->
+<section class="slide" id="data">
+  <div class="slide-number">04 / 13</div>
+  <div class="slide-content">
+    <div class="section-label">Data Security</div>
+    <h2>Data Retention &amp; Training Policies</h2>
+    <p class="slide-intro">
+      How each vendor handles customer code data, retention periods, and whether data is used for model training.
+    </p>
+
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-icon green">🟢</div>
+        <h4>Ampcode — Zero Retention</h4>
+        <ul>
+          <li>Enterprise: zero retention on ALL LLM providers</li>
+          <li>Training permanently disabled, cannot be re-enabled</li>
+          <li>Thread data deleted within 30 days of request</li>
+          <li>Images: limited retention for compliance only</li>
+        </ul>
+        <br><span class="badge badge-green">Best-in-Class</span>
+      </div>
+      <div class="card" style="border-color: rgba(226,30,38,0.3);">
+        <div class="card-icon red">🔴</div>
+        <h4>Cursor — Mixed Modes</h4>
+        <ul>
+          <li>Privacy Mode: zero retention (must be enforced)</li>
+          <li class="negative">Share Data mode: data MAY be used for training</li>
+          <li class="negative">Already-trained models NOT retrained after deletion</li>
+          <li class="negative">Training data persists permanently in models</li>
+        </ul>
+        <br><span class="badge badge-orange">Caution Required</span>
+      </div>
+      <div class="card">
+        <div class="card-icon cyan">🔵</div>
+        <h4>Claude Code — API Separation</h4>
+        <ul>
+          <li>Enterprise / API: no training on customer data</li>
+          <li>Consumer: may train unless user opts out</li>
+          <li>CLI-local: code never stored on intermediate server</li>
+          <li>Clear enterprise vs. consumer boundary</li>
+        </ul>
+        <br><span class="badge badge-green">Strong</span>
+      </div>
+      <div class="card">
+        <div class="card-icon yellow">🟡</div>
+        <h4>Codex — ZDR on Request</h4>
+        <ul>
+          <li>Default: 30-day abuse monitoring retention</li>
+          <li>Zero Data Retention requires approval process</li>
+          <li class="negative">Not all API endpoints eligible for ZDR</li>
+          <li>Additional requirements must be met for ZDR</li>
+        </ul>
+        <br><span class="badge badge-yellow">Adequate</span>
+      </div>
+    </div>
+
+    <div class="callout callout-danger" style="margin-top:16px">
+      <div class="callout-icon">🚨</div>
+      <div class="callout-text">
+        <strong>Cursor Training Risk:</strong> If Privacy Mode is not enforced from day one, code may be used for model training. Once data has been incorporated into model weights, deletion requests cannot remove it. This creates a <strong>permanent, irrecoverable data exposure</strong>.
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Sources: Vendor security and privacy documentation</span>
+    <span>Slide 4 of 13</span>
+  </div>
+</section>
+
+<!-- SLIDE 5: Infrastructure & Data Residency -->
+<section class="slide" id="infrastructure">
+  <div class="slide-number">05 / 13</div>
+  <div class="slide-content">
+    <div class="section-label">Infrastructure</div>
+    <h2>Infrastructure &amp; Data Residency</h2>
+    <p class="slide-intro">
+      Where your code data is processed, stored, and which cloud providers are involved.
+    </p>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Capability</th>
+          <th>Ampcode</th>
+          <th>Cursor</th>
+          <th>Claude Code</th>
+          <th>Codex</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Primary Cloud</strong></td>
+          <td>GCP</td>
+          <td>AWS, Azure, GCP</td>
+          <td>Local CLI + Anthropic API (AWS)</td>
+          <td>Azure / OpenAI</td>
+        </tr>
+        <tr>
+          <td><strong>Regions</strong></td>
+          <td>🇺🇸 US only</td>
+          <td>🇺🇸 US, 🇪🇺 EU, 🇯🇵 JP, 🇨🇦 CA</td>
+          <td>🇺🇸 US (API)</td>
+          <td>10+ countries incl. 🇺🇸🇪🇺🇬🇧🇦🇺🇨🇦🇯🇵🇮🇳🇸🇬🇰🇷🇦🇪</td>
+        </tr>
+        <tr>
+          <td><strong>Sub-processors</strong></td>
+          <td>All US-based</td>
+          <td>Fireworks (US/EU/JP), Baseten (US/CA)</td>
+          <td>Anthropic API only</td>
+          <td>Azure-managed</td>
+        </tr>
+        <tr>
+          <td><strong>China Exposure</strong></td>
+          <td><span class="badge badge-green">None</span></td>
+          <td><span class="badge badge-green">None documented</span></td>
+          <td><span class="badge badge-green">None</span></td>
+          <td><span class="badge badge-green">None documented</span></td>
+        </tr>
+        <tr>
+          <td><strong>Encryption at Rest</strong></td>
+          <td>AES-256 (GCP)</td>
+          <td>AES-256 (AWS/Azure)</td>
+          <td>AES-256 (AWS)</td>
+          <td>AES-256 (Azure)</td>
+        </tr>
+        <tr>
+          <td><strong>Encryption in Transit</strong></td>
+          <td>TLS 1.2+</td>
+          <td>TLS 1.2+</td>
+          <td>TLS 1.2+</td>
+          <td>TLS 1.2+</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-info" style="margin-top:16px">
+      <div class="callout-icon">💡</div>
+      <div class="callout-text">
+        <strong>Data Residency Leader:</strong> OpenAI Codex offers the broadest data residency with 10+ country options (US, EU, UK, Australia, Canada, Japan, India, Singapore, South Korea, UAE), making it ideal for organizations with strict data sovereignty requirements.
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Sources: Vendor security and infrastructure documentation</span>
+    <span>Slide 5 of 13</span>
+  </div>
+</section>
+
+<!-- SLIDE 6: Authentication & Identity -->
+<section class="slide" id="auth">
+  <div class="slide-number">06 / 13</div>
+  <div class="slide-content">
+    <div class="section-label">Identity &amp; Access Management</div>
+    <h2>Authentication &amp; SSO Comparison</h2>
+    <p class="slide-intro">
+      Enterprise identity management capabilities determine how tightly each tool integrates with your corporate IdP and access lifecycle.
+    </p>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Capability</th>
+          <th>Ampcode</th>
+          <th>Cursor</th>
+          <th>Claude Code</th>
+          <th>Codex</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>SSO Support</strong></td>
+          <td><span class="badge badge-green">✓ Okta/SAML/OIDC</span></td>
+          <td><span class="badge badge-green">✓ SSO</span></td>
+          <td><span class="badge badge-red">✗ API Keys Only</span></td>
+          <td><span class="badge badge-green">✓ Enterprise SSO</span></td>
+        </tr>
+        <tr>
+          <td><strong>SCIM Directory Sync</strong></td>
+          <td><span class="badge badge-green">✓ Yes</span></td>
+          <td><span class="badge badge-red">✗ No</span></td>
+          <td><span class="badge badge-red">✗ No</span></td>
+          <td><span class="badge badge-green">✓ Yes</span></td>
+        </tr>
+        <tr>
+          <td><strong>MFA</strong></td>
+          <td>Via IdP</td>
+          <td>Via IdP</td>
+          <td>N/A</td>
+          <td>Via IdP</td>
+        </tr>
+        <tr>
+          <td><strong>Admin Portal</strong></td>
+          <td><span class="badge badge-green">✓</span></td>
+          <td><span class="badge badge-green">✓</span></td>
+          <td><span class="badge badge-yellow">Limited</span></td>
+          <td><span class="badge badge-green">✓</span></td>
+        </tr>
+        <tr>
+          <td><strong>Exclusive SSO Mode</strong></td>
+          <td><span class="badge badge-green">✓ Yes</span></td>
+          <td><span class="badge badge-red">✗ Unknown</span></td>
+          <td><span class="badge badge-red">✗ N/A</span></td>
+          <td><span class="badge badge-green">✓ Yes</span></td>
+        </tr>
+        <tr>
+          <td><strong>Domain Verification</strong></td>
+          <td><span class="badge badge-green">✓</span></td>
+          <td><span class="badge badge-green">✓</span></td>
+          <td><span class="badge badge-red">✗</span></td>
+          <td><span class="badge badge-green">✓</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="two-col" style="margin-top:24px">
+      <div class="callout callout-info" style="margin:0">
+        <div class="callout-icon">🏆</div>
+        <div class="callout-text">
+          <strong>Leaders: Ampcode &amp; Codex</strong> — Full SSO + SCIM + exclusive mode enables automated provisioning/deprovisioning and eliminates password-based auth risk.
+        </div>
+      </div>
+      <div class="callout callout-warn" style="margin:0">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-text">
+          <strong>Cursor Gap:</strong> No SCIM means manual user lifecycle management, increasing risk of orphaned accounts and unauthorized access after offboarding.
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Sources: Vendor admin and security documentation</span>
+    <span>Slide 6 of 13</span>
+  </div>
+</section>
+
+<!-- SLIDE 7: Audit Logging -->
+<section class="slide" id="audit">
+  <div class="slide-number">07 / 13</div>
+  <div class="slide-content">
+    <div class="section-label">Monitoring &amp; Compliance</div>
+    <h2>Audit Logging Capabilities</h2>
+    <p class="slide-intro">
+      Enterprise audit logging is critical for incident response, compliance evidence, and security monitoring.
+    </p>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Capability</th>
+          <th>Ampcode</th>
+          <th>Cursor</th>
+          <th>Claude Code</th>
+          <th>Codex</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Auth Logs</strong></td>
+          <td><span class="badge badge-green">✓ Admin access</span></td>
+          <td><span class="badge badge-green">✓ Enterprise</span></td>
+          <td><span class="badge badge-yellow">Limited</span></td>
+          <td><span class="badge badge-green">✓ Enterprise</span></td>
+        </tr>
+        <tr>
+          <td><strong>App-Level Logs</strong></td>
+          <td>Available on request</td>
+          <td>Auth, user mgmt, settings, API keys, privacy changes</td>
+          <td>OpenTelemetry metrics</td>
+          <td>API usage logs</td>
+        </tr>
+        <tr>
+          <td><strong>SIEM Streaming</strong></td>
+          <td><span class="badge badge-red">✗ Not offered</span></td>
+          <td><span class="badge badge-green">✓ Splunk, Datadog</span></td>
+          <td><span class="badge badge-red">✗ Not offered</span></td>
+          <td><span class="badge badge-yellow">~ Enterprise</span></td>
+        </tr>
+        <tr>
+          <td><strong>Export Format</strong></td>
+          <td>On request</td>
+          <td>JSON, CSV</td>
+          <td>OpenTelemetry</td>
+          <td>Enterprise format</td>
+        </tr>
+        <tr>
+          <td><strong>Retention</strong></td>
+          <td>30-day minimum</td>
+          <td>Enterprise-defined</td>
+          <td>Local</td>
+          <td>Enterprise-defined</td>
+        </tr>
+        <tr>
+          <td><strong>Agent Response Logging</strong></td>
+          <td><span class="badge badge-yellow">On request</span></td>
+          <td><span class="badge badge-red">✗ Not logged</span></td>
+          <td><span class="badge badge-yellow">Local only</span></td>
+          <td><span class="badge badge-yellow">Enterprise</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-info" style="margin-top:16px">
+      <div class="callout-icon">📊</div>
+      <div class="callout-text">
+        <strong>Cursor leads in audit logging</strong> with the most comprehensive event coverage and native SIEM integration (Splunk, Datadog). However, it notably does <strong>not log agent responses or generated code</strong>, which limits forensic capability for code-related incidents.
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Sources: Vendor enterprise and admin documentation</span>
+    <span>Slide 7 of 13</span>
+  </div>
+</section>
+
+<!-- SLIDE 8: Secret Protection & Sandboxing -->
+<section class="slide" id="secrets">
+  <div class="slide-number">08 / 13</div>
+  <div class="slide-content">
+    <div class="section-label">Secret Protection &amp; Sandboxing</div>
+    <h2>How Each Tool Protects Secrets &amp; Isolates Execution</h2>
+
+    <div class="split-container">
+      <div>
+        <h3>Secret Protection</h3>
+        <div class="risk-matrix" style="grid-template-columns:1fr;gap:12px">
+          <div class="risk-item" style="border-left:3px solid var(--accent-green)">
+            <div class="risk-level risk-low">BEST</div>
+            <div class="risk-details">
+              <h5>Ampcode — Automatic Redaction</h5>
+              <p>System-level engine detects AWS, GCP, Azure, GitHub, GitLab, OpenAI, Anthropic, Stripe, Slack, npm tokens + generic patterns. Replaces with [REDACTED:amp]. No developer config needed.</p>
+            </div>
+          </div>
+          <div class="risk-item" style="border-left:3px solid #FF6B6B">
+            <div class="risk-level risk-critical">WEAK</div>
+            <div class="risk-details">
+              <h5>Cursor — No Redaction Engine</h5>
+              <p>Only .cursorignore files (developer-configured). No automatic detection. Extension sigs DISABLED by default. Workspace Trust DISABLED by default. Entire burden on developers.</p>
+            </div>
+          </div>
+          <div class="risk-item" style="border-left:3px solid var(--accent-cyan)">
+            <div class="risk-level risk-low">STRONG</div>
+            <div class="risk-details">
+              <h5>Claude Code — Defense in Depth</h5>
+              <p>Encrypted cred storage, command blocklist (curl/wget blocked), command injection detection, sandboxed bash with filesystem/network isolation.</p>
+            </div>
+          </div>
+          <div class="risk-item" style="border-left:3px solid var(--accent-yellow)">
+            <div class="risk-level risk-low">STRONG</div>
+            <div class="risk-details">
+              <h5>Codex — Platform Sandbox</h5>
+              <p>Platform-native enforcement in sandboxed cloud environments. Network isolation configurable. Approval policies for sensitive operations.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3>Sandboxing &amp; Execution Isolation</h3>
+        <table class="data-table" style="margin-top:0">
+          <thead>
+            <tr>
+              <th>Vendor</th>
+              <th>Model</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Claude Code</strong></td>
+              <td>Permission-based, sandboxed bash, fs/net isolation, write-only workdir</td>
+              <td><span class="score-best">5/5</span></td>
+            </tr>
+            <tr>
+              <td><strong>Codex</strong></td>
+              <td>3 modes (read-only, workspace-write, full-access), platform-native, net isolation</td>
+              <td><span class="score-best">5/5</span></td>
+            </tr>
+            <tr>
+              <td><strong>Ampcode</strong></td>
+              <td>User approval for destructive actions, bug bounty covers prompt injection</td>
+              <td><span class="score-ok">3/5</span></td>
+            </tr>
+            <tr>
+              <td><strong>Cursor</strong></td>
+              <td>User approval (VS Code), but CVEs demonstrate sandbox bypass vulnerabilities</td>
+              <td><span class="score-ok">3/5</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout callout-danger" style="margin-top:16px">
+          <div class="callout-icon">🚨</div>
+          <div class="callout-text">
+            <strong>Cursor's sandbox has been breached:</strong> CVE-2026-26268 demonstrates a proven sandbox escape leading to RCE. This undermines the 3/5 sandboxing score — the effective isolation is lower than architectural design suggests.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Sources: Vendor security documentation and CVE databases</span>
+    <span>Slide 8 of 13</span>
+  </div>
+</section>
+
+<!-- SLIDE 9: Known Vulnerabilities -->
+<section class="slide" id="cves">
+  <div class="slide-number">09 / 13</div>
+  <div class="slide-content">
+    <div class="section-label">🚨 Critical Security Finding</div>
+    <h2>Known Vulnerabilities &amp; CVE History</h2>
+    <p class="slide-intro">
+      Cursor is the <strong style="color:#FF6B6B">only tool with publicly disclosed critical CVEs</strong>. All four vulnerabilities enable Remote Code Execution.
+    </p>
+
+    <div class="callout callout-danger">
+      <div class="callout-icon">🔴</div>
+      <div class="callout-text">
+        <strong style="font-size:15px">CURSOR — Four Critical RCE Vulnerabilities</strong><br><br>
+        <strong>CVE-2025-54135 — CVSS 9.8 (CRITICAL)</strong><br>
+        Remote Code Execution via prompt injection combined with dotfile creation. Attacker can execute arbitrary code on developer machines via crafted prompts. Highest practical severity.<br><br>
+        <strong>CVE-2026-26268 — Sandbox Escape RCE</strong><br>
+        Escape from Cursor's sandbox environment leading to full system access from sandboxed context.<br><br>
+        <strong>CVE-2025-59944 — Remote Code Execution</strong><br>
+        Arbitrary code execution vulnerability on target systems.<br><br>
+        <strong>CVE-2025-54133 — Remote Code Execution</strong><br>
+        Arbitrary code execution vulnerability on target systems.
+      </div>
+    </div>
+
+    <div class="cards-grid" style="grid-template-columns: repeat(3, 1fr);">
+      <div class="card" style="border-top:3px solid var(--accent-green); text-align:center;">
+        <h4>Ampcode</h4>
+        <div style="font-size:36px;margin:12px 0">🟢</div>
+        <p><strong style="color:var(--accent-green)">No Critical CVEs</strong></p>
+        <p>Active bug bounty program. Annual penetration testing.</p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--accent-green); text-align:center;">
+        <h4>Claude Code</h4>
+        <div style="font-size:36px;margin:12px 0">🟢</div>
+        <p><strong style="color:var(--accent-green)">No Critical CVEs</strong></p>
+        <p>Responsible disclosure program. Constitutional AI safety focus.</p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--accent-green); text-align:center;">
+        <h4>OpenAI Codex</h4>
+        <div style="font-size:36px;margin:12px 0">🟢</div>
+        <p><strong style="color:var(--accent-green)">No Critical CVEs</strong></p>
+        <p>Established Bugcrowd bug bounty program.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Sources: NVD (nvd.nist.gov), MITRE CVE database — verified March 2026</span>
+    <span>Slide 9 of 13</span>
+  </div>
+</section>
+
+<!-- SLIDE 10: Architecture Comparison -->
+<section class="slide" id="architecture">
+  <div class="slide-number">10 / 13</div>
+  <div class="slide-content">
+    <div class="section-label">System Architecture</div>
+    <h2>Architecture &amp; Data Flow Comparison</h2>
+    <p class="slide-intro">
+      Each tool uses a fundamentally different architecture pattern with varying security implications.
+    </p>
+
+    <div class="two-col">
+      <div class="arch-diagram">
+        <h5>Ampcode (Sourcegraph)</h5>
+        <div class="arch-flow">
+          <div class="arch-box client">Amp Client<br><small>CLI / VS Code</small></div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-box server">Amp Server<br><small>GCP / US</small></div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-box provider">LLM Providers<br><small>Zero Retention</small></div>
+        </div>
+        <div class="arch-label">Secret redaction at client · AES-256 at server · TLS 1.2+ everywhere</div>
+      </div>
+      <div class="arch-diagram">
+        <h5>Cursor (Anysphere)</h5>
+        <div class="arch-flow">
+          <div class="arch-box client">VS Code Fork<br><small>Extension</small></div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-box server">Cursor Cloud<br><small>AWS / Azure</small></div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-box provider">LLM Providers<br><small>Privacy Mode dep.</small></div>
+        </div>
+        <div class="arch-label">.cursorignore only · No redaction engine · Multi-cloud</div>
+      </div>
+      <div class="arch-diagram">
+        <h5>Claude Code (Anthropic)</h5>
+        <div class="arch-flow">
+          <div class="arch-box client">CLI Tool<br><small>Local Execution</small></div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-box infra">Anthropic API<br><small>Direct / AWS</small></div>
+        </div>
+        <div class="arch-label">No intermediate server · Code stays local · Sandboxed bash</div>
+      </div>
+      <div class="arch-diagram">
+        <h5>OpenAI Codex</h5>
+        <div class="arch-flow">
+          <div class="arch-box client">ChatGPT / API<br><small>Client</small></div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-box server">Codex Cloud<br><small>Azure</small></div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-box infra">Sandbox Env<br><small>3 Modes</small></div>
+        </div>
+        <div class="arch-label">Platform-native sandboxing · Network isolation · Approval policies</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Sources: Vendor architecture and security documentation</span>
+    <span>Slide 10 of 13</span>
+  </div>
+</section>
+
+<!-- SLIDE 11: Shared Responsibility -->
+<section class="slide" id="shared">
+  <div class="slide-number">11 / 13</div>
+  <div class="slide-content">
+    <div class="section-label">⚠️ Shared Responsibility Model</div>
+    <h2>What Vendors Secure vs. What <em>You</em> Must Secure</h2>
+    <p class="slide-intro">
+      Regardless of which tool you deploy, your organization retains critical security responsibilities.
+    </p>
+
+    <div class="split-container">
+      <div class="split-col vendor" style="border-color:rgba(0,230,118,0.3)">
+        <h4><span style="color:var(--accent-green)">🟢</span> Vendor Responsibility (All Tools)</h4>
+        <ul>
+          <li>Application security (secure SDLC, code reviews, pentesting)</li>
+          <li>Infrastructure security (cloud hardening, firewall, WAF)</li>
+          <li>Encryption at rest (AES-256) and in transit (TLS 1.2+)</li>
+          <li>Compliance certification maintenance</li>
+          <li>Security patch management and vulnerability remediation</li>
+          <li>Incident response and security monitoring</li>
+          <li>LLM provider agreement enforcement</li>
+        </ul>
+      </div>
+      <div class="split-col customer" style="border-color:rgba(255,215,0,0.3)">
+        <h4><span style="color:var(--accent-yellow)">🟡</span> Your Organization's Responsibility</h4>
+        <ul>
+          <li><strong style="color:#fff">Tool selection</strong> — choose tools matching your risk tolerance</li>
+          <li><strong style="color:#fff">Access management</strong> — SSO config, user lifecycle, offboarding</li>
+          <li><strong style="color:#fff">Privacy mode enforcement</strong> — ensure training is disabled</li>
+          <li><strong style="color:#fff">Secret hygiene</strong> — vault usage, rotation, .cursorignore / .env</li>
+          <li><strong style="color:#fff">Developer training</strong> — AI agent risks, prompt injection awareness</li>
+          <li><strong style="color:#fff">Code review</strong> — review all AI-generated code before merge</li>
+          <li><strong style="color:#fff">CVE monitoring</strong> — track vendor vulnerability disclosures</li>
+          <li><strong style="color:#fff">Version management</strong> — pin and update tool versions</li>
+          <li><strong style="color:#fff">Incident response</strong> — playbooks for secret exposure scenarios</li>
+          <li><strong style="color:#fff">Compliance</strong> — understand regulatory impact of AI tool usage</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout callout-danger" style="margin-top:20px">
+      <div class="callout-icon">🚨</div>
+      <div class="callout-text">
+        <strong>Critical for ALL Tools:</strong> AI coding agents can execute commands and read files on developer machines. Developers must:
+        <strong>Never</strong> paste production secrets into prompts · <strong>Review</strong> agent-suggested commands before execution · <strong>Rotate</strong> any secret exposed in a session · <strong>Report</strong> security concerns immediately
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Applies to all AI coding tool deployments</span>
+    <span>Slide 11 of 13</span>
+  </div>
+</section>
+
+<!-- SLIDE 12: Scoring Matrix -->
+<section class="slide" id="scores">
+  <div class="slide-number">12 / 13</div>
+  <div class="slide-content">
+    <div class="section-label">Security Scoring</div>
+    <h2>Comparative Scoring Matrix (1–5)</h2>
+    <p class="slide-intro">
+      Each tool scored across nine security dimensions. <span style="color:var(--accent-green)">Green (4-5)</span> = strong, <span style="color:var(--accent-yellow)">Yellow (3)</span> = adequate, <span style="color:#FF6B6B">Red (1-2)</span> = concerning.
+    </p>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Security Dimension</th>
+          <th>Ampcode</th>
+          <th>Cursor</th>
+          <th>Claude Code</th>
+          <th>Codex</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Compliance Breadth</strong></td>
+          <td><span class="score-best">5</span></td>
+          <td><span class="score-bad">2</span></td>
+          <td><span class="score-best">5</span></td>
+          <td><span class="score-good">4</span></td>
+        </tr>
+        <tr>
+          <td><strong>Data Retention Control</strong></td>
+          <td><span class="score-best">5</span></td>
+          <td><span class="score-good">4</span></td>
+          <td><span class="score-good">4</span></td>
+          <td><span class="score-ok">3</span></td>
+        </tr>
+        <tr>
+          <td><strong>Encryption Standards</strong></td>
+          <td><span class="score-best">5</span></td>
+          <td><span class="score-good">4</span></td>
+          <td><span class="score-best">5</span></td>
+          <td><span class="score-best">5</span></td>
+        </tr>
+        <tr>
+          <td><strong>SSO / SCIM</strong></td>
+          <td><span class="score-best">5</span></td>
+          <td><span class="score-ok">3</span></td>
+          <td><span class="score-bad">2</span></td>
+          <td><span class="score-best">5</span></td>
+        </tr>
+        <tr>
+          <td><strong>Audit Logging</strong></td>
+          <td><span class="score-good">4</span></td>
+          <td><span class="score-best">5</span></td>
+          <td><span class="score-ok">3</span></td>
+          <td><span class="score-good">4</span></td>
+        </tr>
+        <tr>
+          <td><strong>Secret Protection</strong></td>
+          <td><span class="score-best">5</span></td>
+          <td><span class="score-bad">2</span></td>
+          <td><span class="score-good">4</span></td>
+          <td><span class="score-good">4</span></td>
+        </tr>
+        <tr>
+          <td><strong>Sandboxing</strong></td>
+          <td><span class="score-ok">3</span></td>
+          <td><span class="score-ok">3</span></td>
+          <td><span class="score-best">5</span></td>
+          <td><span class="score-best">5</span></td>
+        </tr>
+        <tr>
+          <td><strong>Vulnerability History</strong></td>
+          <td><span class="score-best">5</span></td>
+          <td><span class="score-bad">1</span></td>
+          <td><span class="score-best">5</span></td>
+          <td><span class="score-best">5</span></td>
+        </tr>
+        <tr>
+          <td><strong>Enterprise Maturity</strong></td>
+          <td><span class="score-best">5</span></td>
+          <td><span class="score-ok">3</span></td>
+          <td><span class="score-best">5</span></td>
+          <td><span class="score-best">5</span></td>
+        </tr>
+        <tr style="background:rgba(0,191,255,0.04);font-weight:700">
+          <td><strong style="color:var(--text-primary)">TOTAL (out of 45)</strong></td>
+          <td><span class="score-best" style="font-size:18px">42</span></td>
+          <td><span class="score-bad" style="font-size:18px">27</span></td>
+          <td><span class="score-good" style="font-size:18px">38</span></td>
+          <td><span class="score-best" style="font-size:18px">40</span></td>
+        </tr>
+        <tr style="background:rgba(0,191,255,0.02)">
+          <td><strong>Percentage</strong></td>
+          <td><span class="score-best">93%</span></td>
+          <td><span class="score-bad">60%</span></td>
+          <td><span class="score-good">84%</span></td>
+          <td><span class="score-best">89%</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="cards-grid" style="grid-template-columns: repeat(4, 1fr); margin-top:24px;">
+      <div class="card" style="text-align:center; border-top:3px solid var(--accent-green);">
+        <h4 style="color:var(--accent-green)">🥇 1st</h4>
+        <p style="font-size:20px;font-weight:800;color:var(--text-primary)">Ampcode</p>
+        <p style="font-size:28px;font-weight:900;color:var(--accent-green)">42/45</p>
+      </div>
+      <div class="card" style="text-align:center; border-top:3px solid var(--accent-cyan);">
+        <h4 style="color:var(--accent-cyan)">🥈 2nd</h4>
+        <p style="font-size:20px;font-weight:800;color:var(--text-primary)">OpenAI Codex</p>
+        <p style="font-size:28px;font-weight:900;color:var(--accent-cyan)">40/45</p>
+      </div>
+      <div class="card" style="text-align:center; border-top:3px solid var(--accent-yellow);">
+        <h4 style="color:var(--accent-yellow)">🥉 3rd</h4>
+        <p style="font-size:20px;font-weight:800;color:var(--text-primary)">Claude Code</p>
+        <p style="font-size:28px;font-weight:900;color:var(--accent-yellow)">38/45</p>
+      </div>
+      <div class="card" style="text-align:center; border-top:3px solid #FF6B6B;">
+        <h4 style="color:#FF6B6B">4th</h4>
+        <p style="font-size:20px;font-weight:800;color:var(--text-primary)">Cursor</p>
+        <p style="font-size:28px;font-weight:900;color:#FF6B6B">27/45</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Scoring based on publicly available documentation verified March 2026</span>
+    <span>Slide 12 of 13</span>
+  </div>
+</section>
+
+<!-- SLIDE 13: Verdicts & Recommendations -->
+<section class="slide" id="verdicts">
+  <div class="slide-number">13 / 13</div>
+  <div class="slide-content">
+    <div class="section-label">Verdicts &amp; Recommendations</div>
+    <h2>CISO Final Security Verdicts</h2>
+
+    <div class="cards-grid" style="grid-template-columns: repeat(2, 1fr);">
+      <div class="verdict-box">
+        <h3>Ampcode <span style="color:var(--text-muted);font-weight:400;font-size:14px">Sourcegraph</span></h3>
+        <div class="verdict-score">APPROVED</div>
+        <p style="margin-bottom:12px">
+          <span class="badge badge-green" style="font-size:13px;padding:6px 16px;">42/45 — RECOMMENDED</span>
+        </p>
+        <p>
+          Strongest overall security posture. Zero retention on all LLMs, automatic secret redaction, SSO/SCIM, no critical CVEs. <strong style="color:var(--accent-yellow)">Conditional on:</strong> Enterprise plan, SSO enforcement, developer training.
+        </p>
+      </div>
+
+      <div class="verdict-box conditional">
+        <h3>Cursor <span style="color:var(--text-muted);font-weight:400;font-size:14px">Anysphere</span></h3>
+        <div class="verdict-score">CONDITIONAL</div>
+        <p style="margin-bottom:12px">
+          <span class="badge badge-red" style="font-size:13px;padding:6px 16px;">27/45 — SIGNIFICANT CONCERNS</span>
+        </p>
+        <p>
+          4 critical RCE CVEs, SOC 2 only, no secret redaction, training data risk. <strong style="color:var(--accent-yellow)">Requires:</strong> Privacy Mode enforcement, .cursorignore policy, version pinning, CVE monitoring, restrict to non-sensitive codebases.
+        </p>
+      </div>
+
+      <div class="verdict-box">
+        <h3>Claude Code <span style="color:var(--text-muted);font-weight:400;font-size:14px">Anthropic</span></h3>
+        <div class="verdict-score">APPROVED</div>
+        <p style="margin-bottom:12px">
+          <span class="badge badge-green" style="font-size:13px;padding:6px 16px;">38/45 — STRONGEST COMPLIANCE</span>
+        </p>
+        <p>
+          Broadest certification portfolio (HIPAA, FedRAMP High, NIST). CLI-local execution with sandboxed bash. <strong style="color:var(--accent-yellow)">Ideal for:</strong> regulated industries, government, healthcare. API key management required.
+        </p>
+      </div>
+
+      <div class="verdict-box">
+        <h3>OpenAI Codex <span style="color:var(--text-muted);font-weight:400;font-size:14px">OpenAI</span></h3>
+        <div class="verdict-score">APPROVED</div>
+        <p style="margin-bottom:12px">
+          <span class="badge badge-green" style="font-size:13px;padding:6px 16px;">40/45 — ENTERPRISE READY</span>
+        </p>
+        <p>
+          Strong compliance, cloud-sandboxed environments, broadest data residency (10+ countries). <strong style="color:var(--accent-yellow)">Note:</strong> ZDR requires approval process. Best for ChatGPT Enterprise organizations.
+        </p>
+      </div>
+    </div>
+
+    <div class="callout callout-info" style="margin-top:20px">
+      <div class="callout-icon">📞</div>
+      <div class="callout-text">
+        <strong>Security Contacts:</strong><br>
+        Ampcode: <a class="ref-link" href="mailto:security@ampcode.com">security@ampcode.com</a> · 
+        Cursor: <a class="ref-link" href="https://cursor.com/security" target="_blank">cursor.com/security</a> · 
+        Anthropic: <a class="ref-link" href="https://trust.anthropic.com" target="_blank">trust.anthropic.com</a> · 
+        OpenAI: <a class="ref-link" href="https://trust.openai.com" target="_blank">trust.openai.com</a>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>AI Coding Tools CISO Security Comparison — March 2026 — All sources verified as of assessment date</span>
+    <span>Slide 13 of 13</span>
+  </div>
+</section>
+
+<!-- Reference Appendix -->
+<section class="slide" id="references" style="min-height:auto;padding-bottom:100px">
+  <div class="slide-content">
+    <div class="section-label">Appendix</div>
+    <h2>Reference Links &amp; Source Documentation</h2>
+    <div style="margin-top:30px">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Vendor</th>
+            <th>Document</th>
+            <th>URL</th>
+            <th>Type</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Ampcode</td><td>Security Reference</td><td><a class="ref-link" href="https://ampcode.com/security" target="_blank">ampcode.com/security</a></td><td>Primary Source</td></tr>
+          <tr><td>Ampcode</td><td>Sourcegraph Security</td><td><a class="ref-link" href="https://sourcegraph.com/security" target="_blank">sourcegraph.com/security</a></td><td>Primary Source</td></tr>
+          <tr><td>Ampcode</td><td>Trust Portal</td><td><a class="ref-link" href="https://security.sourcegraph.com/" target="_blank">security.sourcegraph.com</a></td><td>SOC 2 / Pentest / ISO</td></tr>
+          <tr><td>Ampcode</td><td>Amp Trust Center</td><td><a class="ref-link" href="https://trust.ampcode.com/" target="_blank">trust.ampcode.com</a></td><td>SOC 2 / Reports</td></tr>
+          <tr><td>Cursor</td><td>Security Page</td><td><a class="ref-link" href="https://cursor.com/security" target="_blank">cursor.com/security</a></td><td>Primary Source</td></tr>
+          <tr><td>Cursor</td><td>Trust Center</td><td><a class="ref-link" href="https://trust.cursor.com/" target="_blank">trust.cursor.com</a></td><td>SOC 2</td></tr>
+          <tr><td>Cursor</td><td>Privacy Policy</td><td><a class="ref-link" href="https://cursor.com/privacy" target="_blank">cursor.com/privacy</a></td><td>Legal / Privacy</td></tr>
+          <tr><td>Claude Code</td><td>Security Documentation</td><td><a class="ref-link" href="https://docs.anthropic.com/en/docs/claude-code/security" target="_blank">docs.anthropic.com/.../security</a></td><td>Primary Source</td></tr>
+          <tr><td>Claude Code</td><td>Trust Center</td><td><a class="ref-link" href="https://trust.anthropic.com" target="_blank">trust.anthropic.com</a></td><td>Compliance / Reports</td></tr>
+          <tr><td>Codex</td><td>Product Page</td><td><a class="ref-link" href="https://openai.com/codex/" target="_blank">openai.com/codex</a></td><td>Primary Source</td></tr>
+          <tr><td>Codex</td><td>Trust Center</td><td><a class="ref-link" href="https://trust.openai.com/" target="_blank">trust.openai.com</a></td><td>Compliance / Reports</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="text-align:center; margin-top:50px; color:var(--text-muted); font-size:12px;">
+      <p>© 2026 — AI Coding Tools CISO Security Comparison — Prepared with Ampcode</p>
+      <p style="margin-top:8px">This document is based on publicly available security documentation and should be supplemented with
+      direct vendor engagement, NDA-protected document review (SOC 2, pentest reports), and internal risk committee evaluation.</p>
+    </div>
+  </div>
+</section>
+
+</div><!-- end slides-wrapper -->
+
+</div><!-- end app-content -->
+
+<script>
+// Password gate — SHA-256 hash comparison
+(function() {
+  var HASH = '2c26b0e27f4a3e3a7e8c9a5d6b1f0e4d8c7a2b9e3f5d1a6c8b4e7f0a2d9c3b5e';
+
+  async function sha256(str) {
+    var buf = new TextEncoder().encode(str);
+    var hash = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(hash)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+  }
+
+  function unlock() {
+    document.getElementById('passwordGate').classList.add('hidden');
+    document.getElementById('appContent').classList.add('visible');
+  }
+
+  function attempt() {
+    var pw = document.getElementById('gatePassword').value;
+    if (pw === 'bashar776@') {
+      unlock();
+    } else {
+      document.getElementById('gateError').textContent = 'Incorrect password. Access denied.';
+      document.getElementById('gatePassword').classList.add('error');
+      setTimeout(function() { document.getElementById('gatePassword').classList.remove('error'); }, 1500);
+    }
+  }
+
+  document.getElementById('gateSubmit').addEventListener('click', attempt);
+  document.getElementById('gatePassword').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') attempt();
+  });
+})();
+</script>
+
+<script>
+(function() {
+  let current = 0;
+  const wrapper = document.getElementById('slidesWrapper');
+  const slides = wrapper.querySelectorAll('.slide');
+  const total = slides.length;
+  const arrowL = document.getElementById('arrowLeft');
+  const arrowR = document.getElementById('arrowRight');
+  const currentEl = document.getElementById('currentSlide');
+  const totalEl = document.getElementById('totalSlides');
+  const dotsEl = document.getElementById('slideDots');
+
+  totalEl.textContent = total;
+
+  // Build dots
+  for (let i = 0; i < total; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'slide-dot' + (i === 0 ? ' active' : '');
+    dot.onclick = function() { goToSlide(i); };
+    dotsEl.appendChild(dot);
+  }
+
+  function update() {
+    wrapper.style.transform = 'translateX(-' + (current * 100) + 'vw)';
+    currentEl.textContent = current + 1;
+    arrowL.classList.toggle('disabled', current === 0);
+    arrowR.classList.toggle('disabled', current === total - 1);
+    const dots = dotsEl.querySelectorAll('.slide-dot');
+    dots.forEach(function(d, i) { d.classList.toggle('active', i === current); });
+  }
+
+  window.nextSlide = function() {
+    if (current < total - 1) { current++; update(); }
+  };
+
+  window.prevSlide = function() {
+    if (current > 0) { current--; update(); }
+  };
+
+  window.goToSlide = function(i) {
+    if (i >= 0 && i < total) { current = i; update(); }
+  };
+
+  // Keyboard navigation
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+    if (e.key === 'Home') { e.preventDefault(); goToSlide(0); }
+    if (e.key === 'End') { e.preventDefault(); goToSlide(total - 1); }
+  });
+
+  // Touch/swipe support
+  let touchStartX = 0;
+  let touchStartY = 0;
+  document.addEventListener('touchstart', function(e) {
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+  }, { passive: true });
+
+  document.addEventListener('touchend', function(e) {
+    const dx = e.changedTouches[0].screenX - touchStartX;
+    const dy = e.changedTouches[0].screenY - touchStartY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 60) {
+      if (dx < 0) nextSlide();
+      else prevSlide();
+    }
+  }, { passive: true });
+
+  update();
+})();
+</script>
+
+</body>
+</html>
