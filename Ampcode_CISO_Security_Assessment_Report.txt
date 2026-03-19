@@ -1,0 +1,1026 @@
+================================================================================
+                    CONFIDENTIAL — INTERNAL USE ONLY
+================================================================================
+
+          CYBERSECURITY ASSESSMENT REPORT: AMPCODE & SOURCEGRAPH
+          =====================================================
+          Enterprise Readiness Review for CISO Approval
+
+          Prepared for:    Chief Information Security Officer
+          Assessment Date: March 19, 2026
+          Classification:  Confidential — Restricted Distribution
+          Scope:           Ampcode AI Coding Agent
+                           Sourcegraph Code Search Platform
+          Vendor:          Sourcegraph, Inc.
+          Vendor Website:  https://sourcegraph.com
+          Product Website: https://ampcode.com
+
+================================================================================
+                         TABLE OF CONTENTS
+================================================================================
+
+  1.  Executive Summary
+  2.  Vendor Overview & Trust Indicators
+  3.  Compliance & Certifications
+  4.  System Architecture
+  5.  Data Security & Retention
+  6.  Encryption Standards
+  7.  Infrastructure Security
+  8.  Authentication & Identity Management
+  9.  Audit Logging
+  10. Automatic Secret Redaction
+  11. Third-Party Service Providers & Data Exposure Map
+  12. Model Training & AI Data Usage Policy
+  13. Bug Bounty & Vulnerability Disclosure
+  14. Shared Responsibility Model
+  15. Your Organization's Responsibilities
+  16. Risk Assessment Matrix
+  17. Pre-Deployment Checklist
+  18. Recommendation & Verdict
+  19. Reference Links & Source Documentation
+  20. Document Control
+
+================================================================================
+  1. EXECUTIVE SUMMARY
+================================================================================
+
+This report provides a comprehensive cybersecurity assessment of Ampcode
+(developed by Sourcegraph, Inc.) and the Sourcegraph Code Search platform to
+determine their suitability for enterprise adoption within our organization.
+
+Ampcode is an AI-powered coding agent that assists software engineers with
+code generation, review, debugging, and codebase exploration. Sourcegraph is
+a code intelligence platform used for cross-repository code search.
+
+KEY FINDINGS:
+
+  * Ampcode/Sourcegraph holds SOC 2 Type II certification and ISO/IEC
+    27001:2022 certification, both independently audited.
+
+  * The Enterprise plan provides zero data retention on ALL LLM providers —
+    no customer code is retained beyond the time needed for inference.
+
+  * Model training on customer data is permanently disabled on Enterprise
+    plans and cannot be enabled.
+
+  * All infrastructure is hosted on Google Cloud Platform in the United
+    States. No infrastructure or service providers are based in China.
+
+  * Enterprise SSO (Okta, SAML, OIDC) and SCIM Directory Sync are
+    supported for centralized identity management.
+
+  * Automatic secret redaction is built in at the system level, though it
+    is best-effort and has documented limitations.
+
+  * All data is encrypted with AES-256 at rest and TLS 1.2+ in transit.
+
+  * Annual third-party penetration testing covers the full stack (clients,
+    backend, infrastructure).
+
+OVERALL ASSESSMENT: The security posture of Ampcode and Sourcegraph meets
+enterprise requirements. Approval is recommended, conditional on Enterprise
+plan activation, SSO enforcement, and developer security training.
+
+    Ref: https://ampcode.com/security
+    Ref: https://sourcegraph.com/security
+    Ref: https://security.sourcegraph.com/
+
+
+================================================================================
+  2. VENDOR OVERVIEW & TRUST INDICATORS
+================================================================================
+
+Company:        Sourcegraph, Inc.
+Headquarters:   San Francisco, California, USA
+Product:        Ampcode (AI Coding Agent), Sourcegraph (Code Search)
+Website:        https://sourcegraph.com / https://ampcode.com
+
+Sourcegraph is an established code intelligence company whose platform is
+trusted by major enterprise customers including:
+
+  - Reddit
+  - Uber
+  - Dropbox
+  - Databricks
+  - Indeed
+  - Nutanix
+  - Plaid
+  - Canva
+
+The vendor maintains active security programs including a bug bounty
+program, a public Security Trust Portal, and dedicated security team
+oversight.
+
+    Ref: https://security.sourcegraph.com/
+    Ref: https://trust.ampcode.com/
+
+
+================================================================================
+  3. COMPLIANCE & CERTIFICATIONS
+================================================================================
+
+Sourcegraph and Ampcode maintain the following compliance certifications,
+all verified by independent third-party auditors:
+
+  CERTIFICATION              STATUS          NOTES
+  -------------------------  --------------  ----------------------------------
+  SOC 2 Type II              ✓ Certified     Available via Trust Portal
+  ISO/IEC 27001:2022         ✓ Certified     Available via Trust Portal
+  GDPR                       ✓ Compliant     EU data subject rights supported
+  CCPA                       ✓ Compliant     No sale of personal information
+  EU AI Act                  ✓ Compliant     Listed on Security Trust Portal
+
+SECURITY ASSESSMENTS PERFORMED:
+
+  - Annual third-party penetration testing covering clients, backend, and
+    infrastructure (reports available upon NDA via Trust Portal).
+  - Containers scanned for CVEs using GCP-native tooling.
+  - Software components continuously monitored for CVEs.
+  - Internal security audits conducted regularly.
+  - Signed Software Bill-of-Materials (SBOM) published for container images.
+  - Code coverage tools used to ensure unit test coverage.
+  - Distroless Docker images used to minimize attack surface.
+
+HOW TO ACCESS REPORTS:
+
+  SOC 2 report, penetration test reports, ISO 27001 certificate, and a
+  security brief document are available upon request through:
+
+    Sourcegraph Trust Portal: https://security.sourcegraph.com/
+    Amp Trust Portal:         https://trust.ampcode.com/
+
+  NOTE: We recommend requesting and reviewing the SOC 2 Type II report
+  and most recent penetration test report before finalizing approval.
+
+    Ref: https://sourcegraph.com/security
+    Ref: https://sourcegraph.com/docs/cli/how-tos/fetch_sboms
+
+
+================================================================================
+  4. SYSTEM ARCHITECTURE
+================================================================================
+
+Ampcode operates as a two-component architecture:
+
+  COMPONENT 1: AMP CLIENT (Local)
+  --------------------------------
+  The Amp Client is the end-user application — primarily the Amp CLI
+  (available via npm: @sourcegraph/amp) or integrated into VS Code.
+
+  Responsibilities:
+    - Local code and context management
+    - Local settings and thread history
+    - Communicates with Amp Server (ampcode.com)
+    - Executes tools as requested by the server (e.g., file reads, bash)
+
+  Security characteristics:
+    - Runs entirely on the developer's local machine
+    - Never clones, indexes, or stores the entire codebase
+    - Best-effort avoidance of reading .env files and credential files
+    - Automatic secret redaction before any data leaves the client
+    - Credentials stored locally at:
+        Linux/macOS: ~/.local/share/amp/secrets.json
+        Windows:     %USERPROFILE%\.local\share\amp\secrets.json
+
+  Network requirements (allowlist for corporate proxies):
+    - ampcode.com
+    - auth.ampcode.com
+    - authapi.ampcode.com
+
+
+  COMPONENT 2: AMP SERVER (Cloud)
+  --------------------------------
+  A multi-tenant cloud service hosted at ampcode.com on Google Cloud
+  Platform.
+
+  Responsibilities:
+    - Authentication and user account management
+    - Workspace management
+    - Thread syncing and storage
+    - Usage tracking
+    - LLM inference proxy (between client and LLM providers)
+
+  Security characteristics:
+    - Hosted on GCP with PostgreSQL database (encrypted)
+    - Does NOT store, clone, or index the entire codebase
+    - Stores only "partial code data" — snippets of or entire code files
+      that are selected as context for individual LLM requests
+    - Thread data deleted within 30 days of deletion request
+
+
+  DATA FLOW:
+
+    Developer's Machine        Ampcode Cloud (GCP)         LLM Providers
+    ┌──────────────────┐       ┌───────────────────┐       ┌──────────────┐
+    │                  │ TLS   │                   │ TLS   │              │
+    │   Amp Client     │──────>│   Amp Server      │──────>│  Anthropic   │
+    │   (CLI/VS Code)  │<──────│   (ampcode.com)   │<──────│  OpenAI      │
+    │                  │ 1.2+  │                   │ 1.2+  │  Google      │
+    │  [Code Snippets] │       │  [Thread Storage] │       │  xAI         │
+    │  [Secret Redact] │       │  [Auth/SSO]       │       │  [Zero       │
+    │  [Local History] │       │  [AES-256 at rest] │      │   Retention] │
+    └──────────────────┘       └───────────────────┘       └──────────────┘
+
+  IMPORTANT: Ampcode does NOT support Bring Your Own Key (BYOK) or
+  self-hosted deployments. This is a deliberate architectural decision
+  documented at: https://ampcode.com/news/no-more-byok
+
+    Ref: https://ampcode.com/security (System Components section)
+
+
+================================================================================
+  5. DATA SECURITY & RETENTION
+================================================================================
+
+DATA SCOPE:
+
+  The Amp Client and Amp Server do NOT see, store, clone, or index the
+  entire codebase. Only "partial code data" is processed — defined as
+  snippets of or entire code files that are selected as context for
+  individual LLM requests. This is not an ongoing or bulk transfer.
+
+LLM DATA RETENTION (ENTERPRISE):
+
+  The Amp Enterprise plan (paid or trial) provides zero data retention
+  for text inputs on ALL LLM providers. This means:
+
+    - No text (including code) sent to LLMs is retained beyond the time
+      required to generate an output.
+    - Images are subject to extremely limited retention periods by LLM
+      providers solely for compliance with law and acceptable usage
+      policies (AUP).
+
+THREAD DATA:
+
+  Thread data includes user messages, LLM responses, code snippets used
+  as context, tool call results, and attachments.
+
+  Deletion policy:
+    - When a thread is explicitly deleted, all data is removed within
+      30 days of thread deletion.
+
+  User account deletion:
+    - Enterprise workspace threads: Owned by the enterprise, not the
+      individual user. Threads remain when a user leaves. Data deleted
+      only when the enterprise contract ends.
+    - Non-enterprise workspace threads: Deleted along with user account
+      per the Privacy Policy.
+    - Threads outside workspaces: Deleted when user deletes account.
+
+  Thread privacy:
+    - Users can mark threads as "private" to prevent workspace sharing.
+    - When joining a workspace, existing personal threads become visible
+      to workspace members unless marked private or created under a
+      separate account.
+
+DATA RESIDENCY:
+
+  All data is stored and processed in the United States.
+  No infrastructure or service providers are based in China.
+  For EEA/Swiss/UK data transfers, Standard Contractual Clauses are used.
+
+PERSONAL DATA:
+
+  Sourcegraph does not sell, share, or rent personal information for
+  cross-contextual behavioral advertising (confirmed CCPA/GDPR compliant).
+  Sourcegraph does not intentionally collect Sensitive Personal Information.
+
+    Ref: https://ampcode.com/security (Data Security & Retention section)
+    Ref: https://sourcegraph.com/terms/privacy
+
+
+================================================================================
+  6. ENCRYPTION STANDARDS
+================================================================================
+
+  IN TRANSIT:
+    - All traffic encrypted using TLS 1.2+
+    - Applies to client-server, server-LLM, and all internal communications
+
+  AT REST:
+    - All data stored by Amp Server encrypted at the volume level using
+      AES-256 encryption
+    - Backups are similarly encrypted
+    - GCP-managed encryption infrastructure
+
+  SOURCEGRAPH CLOUD (Code Search):
+    - All storage volumes encrypted at rest
+    - Data encrypted during transport from code host to cloud environment
+
+    Ref: https://ampcode.com/security (Encryption Standards section)
+
+
+================================================================================
+  7. INFRASTRUCTURE SECURITY
+================================================================================
+
+HOSTING:
+
+  All infrastructure is hosted on Google Cloud Platform (GCP) in the
+  United States, managed through Terraform (Infrastructure-as-Code).
+
+ENVIRONMENT ISOLATION:
+
+  Customer instances on Sourcegraph Cloud are provisioned in fully
+  segregated GCP environments, ensuring complete data segregation between
+  customers.
+
+NETWORK SECURITY:
+
+  - Domains managed through Cloudflare with Web Application Firewall (WAF)
+    and Rate Limiting enabled.
+  - External access to production systems restricted by firewall.
+  - Secrets that grant compute access stored only on encrypted local
+    drives or in a secret management service.
+
+ACCESS CONTROLS:
+
+  - Sourcegraph uses permission management tools for just-in-time (JIT)
+    access provisioning.
+  - Group-based permissions enforce least-privilege access across cloud
+    infrastructure.
+  - Multi-factor authentication (MFA) required for all internal systems.
+  - Access regularly reviewed and revoked upon termination or when no
+    longer needed.
+
+MONITORING & INCIDENT RESPONSE:
+
+  - 24x7x365 service availability monitoring.
+  - 24x7x365 alert investigation and attack triage.
+  - Service, application, and access logs stored centrally and monitored.
+  - Log retention up to 365 days.
+  - Formal Security Incident Response Policy in place.
+  - Only restricted Sourcegraph employees can access customer instances,
+    strictly for support/maintenance. All access is logged and monitored.
+  - Employee access uses secure SSO with MFA protections.
+
+PATCH MANAGEMENT:
+
+  - Instances updated monthly for maintenance.
+  - Security patches applied as needed per the Vulnerability Management
+    Policy.
+
+CONTAINER SECURITY:
+
+  - Distroless Docker images used to minimize attack surface.
+  - Containers scanned for CVEs using GCP provider-specific tooling.
+  - Signed Software Bill-of-Materials (SBOM) published for container
+    images.
+
+    Ref: https://sourcegraph.com/security (Sourcegraph Cloud section)
+    Ref: https://sourcegraphstatus.com/ (real-time system status)
+
+
+================================================================================
+  8. AUTHENTICATION & IDENTITY MANAGEMENT
+================================================================================
+
+ENTERPRISE SSO:
+
+  Amp Enterprise supports Single Sign-On (SSO) through various identity
+  providers, including Okta, via SAML, OAuth, and OpenID Connect. SSO
+  is powered by WorkOS (https://workos.com).
+
+  SSO can be configured as the EXCLUSIVE authentication method for a
+  workspace, disabling password-based authentication entirely. This is
+  the recommended configuration for enterprise deployments.
+
+DIRECTORY SYNC (SCIM):
+
+  Directory Sync (e.g., SCIM) enables automatic provisioning and
+  de-provisioning of user accounts and groups. When a user joins or
+  leaves the organization in the identity provider, their Ampcode
+  access is automatically granted or revoked.
+
+SOURCEGRAPH SELF-HOSTED (Code Search):
+
+  Additional authentication options for self-hosted deployments:
+    - SAML
+    - OAuth
+    - HTTP Proxy authentication
+    - OpenID Connect
+    - Basic authentication (enabled by default, can be disabled)
+
+REPOSITORY PERMISSIONS:
+
+  Enterprise customers can configure Sourcegraph to enforce repository
+  permissions from connected code hosts. A GraphQL API is also available
+  to explicitly set repository permissions.
+
+CONFIGURATION:
+
+  SSO and Directory Sync are configured via the Workspace Settings page
+  in the Ampcode web interface.
+
+    Ref: https://ampcode.com/security (User Authentication section)
+    Ref: https://sourcegraph.com/docs/admin/permissions
+
+
+================================================================================
+  9. AUDIT LOGGING
+================================================================================
+
+AUTHENTICATION AUDIT LOGS:
+
+  Audit logs for user authentication-related events are available to
+  Workspace Admins in Enterprise workspaces. These cover login events,
+  SSO events, and related authentication activities.
+
+APPLICATION AUDIT LOGS:
+
+  Amp maintains comprehensive application audit logs for security and
+  monitoring purposes. Logs are structured and include:
+    - Timestamps
+    - Actor IDs (who performed the action)
+    - Request details
+    - Event information
+
+  These logs are collected internally and monitored by the Amp security
+  team. They are NOT currently exposed to Workspace Admins in the UI,
+  but can be provided upon request for Enterprise workspaces — for
+  example, during customer audits or security incidents.
+
+RETENTION:
+
+  Audit logs are retained for a minimum of 30 days.
+
+SOURCEGRAPH CLOUD:
+
+  Service, application, and access logs are stored centrally and
+  monitored. Logs retained up to 365 days. Only information crucial
+  for security and support is logged. Only restricted personnel have
+  access to user data.
+
+    Ref: https://ampcode.com/security (Audit Logging section)
+
+
+================================================================================
+  10. AUTOMATIC SECRET REDACTION
+================================================================================
+
+Ampcode automatically detects and redacts secrets before they can enter
+threads or be transmitted to any external service. This protection
+operates at the lowest level of the system.
+
+BEHAVIOR:
+
+  When a secret is detected, it is replaced with a redaction marker:
+
+    [REDACTED:amp]
+
+  Detected secrets are:
+    - Never visible to the LLM
+    - Never stored in local cache
+    - Never transmitted to LLM providers
+    - Never saved on ampcode.com
+
+SUPPORTED SECRET TYPES:
+
+  Category              Examples
+  --------------------  -------------------------------------------------
+  Cloud Providers       AWS, Google Cloud, Azure credentials
+  Development Platforms GitHub, GitLab, Sourcegraph, Amp access tokens
+  LLM Providers         OpenAI, Anthropic, HuggingFace API keys
+  Common Services       Stripe, Slack, npm tokens
+  Generic Patterns      API keys, webhook secrets, password fields
+
+  Supported secret types are regularly updated. Contact
+  support@ampcode.com to request new secret types.
+
+KNOWN LIMITATIONS:
+
+  Secret redaction is BEST-EFFORT and may not catch:
+
+    - Secrets in non-standard formats or custom internal systems
+    - Secrets that do not follow recognizable patterns
+    - Encoded or obfuscated secrets
+
+  IMPORTANT: This is a significant consideration for organizations using
+  custom or proprietary secret formats. Additional controls (developer
+  training, pre-commit hooks, vault-based secret management) should be
+  implemented as defense-in-depth measures.
+
+IF A SECRET IS NOT REDACTED:
+
+  1. Edit the message that precedes the secret being read and resend it.
+     This will overwrite the thread contents on ampcode.com.
+  2. Mark the thread as private (prevents workspace sharing but does not
+     remove the secret from ampcode.com).
+  3. Rotate the exposed secret immediately as a security precaution.
+
+ADDITIONAL CLIENT PROTECTIONS:
+
+  - The Amp Client makes a best-effort to avoid reading .env files and
+    other credentials files.
+  - Credentials are stored locally in a secure path.
+
+    Ref: https://ampcode.com/security (Secret Redaction section)
+
+
+================================================================================
+  11. THIRD-PARTY SERVICE PROVIDERS & DATA EXPOSURE MAP
+================================================================================
+
+The following table maps all third-party providers used by Ampcode, their
+locations, and the level of data they can access.
+
+ALL PROVIDERS ARE US-BASED. NO CHINA-BASED INFRASTRUCTURE.
+
+  PROVIDER               LOCATION  DATA EXPOSURE     PURPOSE
+  ---------------------  --------  ----------------  --------------------------
+  Google Cloud Platform  USA       Partial code      Primary infrastructure,
+                                                     PostgreSQL, storage
+
+  Anthropic (Claude)     USA       Partial code      Primary LLM inference
+
+  OpenAI                 USA       Partial code      LLM inference (select
+                                                     models)
+
+  xAI                    USA       Partial code      LLM inference
+
+  Google Vertex AI       USA       Partial code      Gemini/Claude inference
+
+  Amazon Bedrock         USA       Partial code      Claude inference
+
+  Fireworks              USA       Partial code      Proprietary Amp model
+                                                     features
+
+  Baseten                USA       Partial code      Proprietary Amp model
+                                                     features
+
+  Cloudflare             USA       Metadata only     WAF, DNS, Rate Limiting
+                                   (IP addresses)
+
+  WorkOS                 USA       No code data      Authentication, SSO,
+                                   (name, email)     user management
+
+  Parallel               USA       No code data      Web search / page
+                                                     retrieval tools
+
+  Stripe                 USA       No code data      Billing & payments
+                                   (payment info)
+
+  Sparkpost / Bird       USA       No code data      Email delivery (10-day
+                                   (email address)   header retention)
+
+  Sentry                 USA       Error data        Error monitoring /
+                                   (may include       debugging
+                                    email, PII)
+
+  Zendesk                USA       No code data      Support ticket management
+
+  Slack                  USA       No code data      Internal communication
+
+  Google Workspace       USA       No code data      Internal communication
+
+"Partial code data" means snippets of or entire code files selected as
+context for LLM requests — NOT the entire codebase.
+
+SOURCEGRAPH SUBPROCESSORS (Code Search):
+
+  See complete list at: https://sourcegraph.com/terms/subprocessors
+  Last updated: February 3, 2026.
+
+    Ref: https://ampcode.com/security (Infrastructure & Service Providers)
+    Ref: https://sourcegraph.com/terms/subprocessors
+
+
+================================================================================
+  12. MODEL TRAINING & AI DATA USAGE POLICY
+================================================================================
+
+  - Amp does NOT train models on your data, unless you have explicitly
+    opted in to training.
+
+  - On an Enterprise workspace, turning training on requires approval
+    of the Workspace Admin.
+
+  - On an Enterprise workspace plan (paid or trial), training can
+    NEVER be enabled. This is a permanent restriction.
+
+  - Ad-supported free usage (Daily Grant) does not require opting into
+    training. Enterprise workspaces can disable ad-supported free usage
+    for all members.
+
+  - When using Amp Free Mode, Sourcegraph may perform periodic automated
+    keyword searches of connected files/codebase for context-specific
+    advertisement placement. No personal data is collected during keyword
+    searches. Results are NOT shared with advertising partners.
+
+  RECOMMENDATION: Ensure all organization members are on the Enterprise
+  plan to guarantee zero training and zero ad-supported access.
+
+    Ref: https://ampcode.com/security (Model Training section)
+    Ref: https://sourcegraph.com/terms/privacy (Amp Free Mode Keywords)
+
+
+================================================================================
+  13. BUG BOUNTY & VULNERABILITY DISCLOSURE
+================================================================================
+
+Ampcode operates an open bug bounty program. Sourcegraph operates a
+private bug bounty program on HackerOne.
+
+  AMPCODE BUG BOUNTY:
+    Scope:    ampcode.com and related digital assets, Amp CLI, official
+              integrations
+    Contact:  disclosure@ampcode.com
+    Note:     Prompt injection and LLM security findings are accepted
+              but typically not eligible for bounty rewards due to LLMs'
+              inherent nature and Amp's code execution capabilities.
+
+  SOURCEGRAPH BUG BOUNTY:
+    Platform: HackerOne (private program)
+    Contact:  security@sourcegraph.com (with HackerOne username)
+
+  SAFE HARBOR:
+    Both programs provide Safe Harbor provisions — authorized researchers
+    are protected from legal action for good-faith vulnerability research
+    conducted in compliance with the policy.
+
+    Ref: https://ampcode.com/security (Bug Bounty Program section)
+    Ref: https://sourcegraph.com/security (Bug Bounty section)
+
+
+================================================================================
+  14. SHARED RESPONSIBILITY MODEL
+================================================================================
+
+Like all cloud services, Ampcode operates under a shared responsibility
+model. Security is a partnership between the vendor and the customer.
+
+  SOURCEGRAPH / AMPCODE IS RESPONSIBLE FOR:
+  ------------------------------------------
+
+    ✓ Application security (secure SDLC, mandatory code reviews,
+      security team review of sensitive changes)
+    ✓ Infrastructure security (GCP hardening, firewall, WAF,
+      Terraform-managed IaC)
+    ✓ Encryption at rest (AES-256) and in transit (TLS 1.2+)
+    ✓ LLM provider zero-retention enforcement on Enterprise plans
+    ✓ Automatic secret redaction engine
+    ✓ 24/7/365 monitoring and incident response
+    ✓ SOC 2 Type II and ISO 27001:2022 compliance maintenance
+    ✓ SSO/SCIM infrastructure and authentication security
+    ✓ Audit logging infrastructure
+    ✓ Security patch management and vulnerability remediation
+    ✓ Bug bounty program operation
+    ✓ Secure software supply chain (signed SBOMs, distroless images)
+    ✓ Privacy policy enforcement and data subject rights
+
+
+  YOUR ORGANIZATION IS RESPONSIBLE FOR:
+  --------------------------------------
+
+    ⚠ Access token management — secure storage, rotation, and revocation
+    ⚠ Code host connection configuration — ensuring correct repositories
+      are linked and permissions are properly configured
+    ⚠ User access management — controlling who has workspace access
+    ⚠ Repository permission enforcement from code hosts
+    ⚠ Secret hygiene — not hardcoding secrets, using vault-based storage,
+      training developers on non-standard secret format risks
+    ⚠ Thread privacy management — marking sensitive threads as private,
+      reviewing shared thread content for sensitive information
+    ⚠ MCP server trust decisions — evaluating third-party MCP extensions
+      before installation and use
+    ⚠ Compliance awareness — understanding how code sharing with cloud
+      services impacts your regulatory obligations
+    ⚠ Developer training — educating development teams on AI agent risks,
+      prompt injection, and data exposure scenarios
+    ⚠ Corporate proxy/firewall configuration — allowlisting required
+      Amp domains
+    ⚠ Incident response coordination — maintaining playbooks for secret
+      exposure in LLM contexts
+
+    Ref: https://sourcegraph.com/security (Shared Security Model)
+
+
+================================================================================
+  15. YOUR ORGANIZATION'S RESPONSIBILITIES — DETAILED GUIDANCE
+================================================================================
+
+The following section provides detailed guidance for developers and IT
+teams on their security responsibilities when using Ampcode.
+
+  A. DEVELOPER CONDUCT
+  ---------------------
+
+  AI coding agents like Ampcode can execute bash commands and read files
+  on the developer's local machine. Developers MUST:
+
+    1. NEVER paste production secrets, credentials, API keys, or PII
+       directly into prompts or chat messages.
+
+    2. REVIEW all agent-suggested commands before execution — especially:
+       - rm, del (file deletion)
+       - curl, wget (network requests)
+       - git push, git commit (repository changes)
+       - Any command involving network operations or system changes
+
+    3. USE .env files and vault-based secret management tools. Ampcode
+       makes a best-effort to avoid reading these files.
+
+    4. ROTATE any secret that may have been inadvertently exposed in a
+       thread — even if redaction was applied, treat it as potentially
+       compromised.
+
+    5. REPORT any security concerns to security@ampcode.com immediately.
+
+    6. MARK threads as private when working on sensitive code or
+       discussing security-critical systems.
+
+
+  B. IT / SECURITY TEAM RESPONSIBILITIES
+  ----------------------------------------
+
+    1. Configure SSO as the EXCLUSIVE authentication method — disable
+       password-based authentication for the workspace.
+
+    2. Enable SCIM Directory Sync to automate user provisioning and
+       de-provisioning aligned with your identity provider.
+
+    3. Establish a secret rotation playbook specifically for scenarios
+       where secrets may have been exposed through LLM context.
+
+    4. Allowlist the following domains on corporate proxy/firewall:
+         - ampcode.com
+         - auth.ampcode.com
+         - authapi.ampcode.com
+
+    5. Periodically request and review application audit logs from
+       Ampcode (available for Enterprise workspaces upon request).
+
+    6. Verify that the Enterprise plan is active and training is
+       permanently disabled.
+
+    7. Disable Daily Grant (ad-supported free usage) for all workspace
+       members if ad-related keyword scanning is not acceptable.
+
+    8. Review the subprocessor list periodically:
+       https://sourcegraph.com/terms/subprocessors
+
+    9. Subscribe to subprocessor change notifications.
+
+
+  C. PROMPT INJECTION AWARENESS
+  ------------------------------
+
+  Prompt injection is an inherent risk with all LLM-based tools.
+  Ampcode's bug bounty program accepts prompt injection reports but
+  notes they are not typically eligible for bounty rewards due to the
+  inherent nature of LLMs. Developers should:
+
+    - Be cautious when the agent reads files from untrusted sources
+    - Review any unusual or unexpected commands suggested by the agent
+    - Never blindly execute multi-step commands without review
+    - Report suspicious agent behavior to security@ampcode.com
+
+
+================================================================================
+  16. RISK ASSESSMENT MATRIX
+================================================================================
+
+  RISK AREA                      LEVEL    JUSTIFICATION
+  -----------------------------  -------  ------------------------------------
+  Data at Rest Exposure          LOW      AES-256 encryption, GCP-managed
+                                          keys, segregated environments.
+                                          Thread data deleted within 30 days.
+
+  Data in Transit Exposure       LOW      TLS 1.2+ enforced on all
+                                          connections. Cloudflare WAF
+                                          provides additional protection.
+
+  LLM Provider Data Leakage      LOW      Enterprise zero-retention
+                                          agreements with all LLM providers.
+                                          No model training on customer data.
+                                          Training permanently disabled on
+                                          Enterprise plans.
+
+  Authentication Bypass           LOW      Enterprise SSO with SCIM,
+                                          MFA-enforced, exclusive SSO mode
+                                          available. Annual penetration
+                                          testing validates auth controls.
+
+  Secret Exposure via LLM        MEDIUM   Automatic redaction is best-effort.
+  Context                                 Non-standard secrets may pass
+                                          through. MITIGATION: Developer
+                                          training, secret rotation policy,
+                                          custom secret pattern requests.
+
+  Prompt Injection / LLM         MEDIUM   Inherent to all LLM-based agents.
+  Manipulation                            Ampcode has bash/tool execution
+                                          capabilities. MITIGATION: User
+                                          approval for actions, bug bounty
+                                          program covers prompt injection.
+
+  Insider Threat (Vendor)        LOW      Restricted employee access, JIT
+                                          provisioning, SSO with MFA, all
+                                          access logged and monitored.
+                                          Regular access reviews.
+
+  Compliance & Regulatory Risk   LOW      SOC 2 Type II, ISO 27001:2022,
+                                          GDPR, CCPA, EU AI Act compliant.
+                                          All data in US jurisdiction. No
+                                          China-based providers.
+
+  Third-Party Provider Risk      LOW      All providers US-based. Major
+                                          providers (GCP, Anthropic, OpenAI)
+                                          have their own enterprise security
+                                          programs. Subprocessor list
+                                          maintained and updated.
+
+  Data Sovereignty               LOW      All processing in USA. SCCs for
+                                          EEA/UK transfers. No data stored
+                                          outside US jurisdiction.
+
+  SUMMARY: 8 LOW risk areas, 2 MEDIUM risk areas. All MEDIUM risks have
+  documented mitigations. No HIGH or CRITICAL risks identified.
+
+
+================================================================================
+  17. PRE-DEPLOYMENT CHECKLIST
+================================================================================
+
+  Before approving enterprise-wide deployment, the following actions
+  should be completed:
+
+  [ ] Request and review SOC 2 Type II report via Trust Portal
+      https://security.sourcegraph.com/
+
+  [ ] Request and review latest penetration test report via Amp Trust
+      Portal — https://trust.ampcode.com/
+
+  [ ] Confirm Enterprise plan activation (ensures zero LLM data
+      retention and permanently disabled model training)
+
+  [ ] Configure SSO as the exclusive authentication method for the
+      workspace (disable password-based authentication)
+
+  [ ] Set up SCIM Directory Sync with corporate identity provider
+
+  [ ] Verify that model training is permanently disabled (Enterprise
+      plan default)
+
+  [ ] Disable Daily Grant (ad-supported free usage) for all workspace
+      members if required by policy
+
+  [ ] Allowlist ampcode.com, auth.ampcode.com, and authapi.ampcode.com
+      on corporate proxy/firewall
+
+  [ ] Review and approve subprocessor list:
+      https://sourcegraph.com/terms/subprocessors
+
+  [ ] Subscribe to subprocessor change notifications
+
+  [ ] Establish a secret rotation playbook for LLM-context exposure
+      scenarios
+
+  [ ] Develop and deliver developer training program covering:
+      - AI agent security awareness
+      - Prompt injection risks
+      - Secret handling procedures
+      - Thread privacy best practices
+      - Command review before execution
+
+  [ ] Request application audit logs for initial baseline review
+
+  [ ] Review Amp Privacy Policy with Legal/DPO team:
+      https://sourcegraph.com/terms/privacy
+
+  [ ] Document accepted risks (secret redaction limitations, prompt
+      injection inherent risk) in the organization's risk register
+
+  [ ] Establish periodic review schedule (quarterly recommended)
+
+
+================================================================================
+  18. RECOMMENDATION & VERDICT
+================================================================================
+
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │                                                                      │
+  │   VERDICT:  APPROVED — RECOMMENDED FOR ENTERPRISE USE                │
+  │                                                                      │
+  │   Ampcode and Sourcegraph demonstrate a mature enterprise security   │
+  │   posture with:                                                      │
+  │                                                                      │
+  │     • SOC 2 Type II and ISO/IEC 27001:2022 certifications            │
+  │     • Comprehensive encryption (AES-256 / TLS 1.2+)                  │
+  │     • Zero LLM data retention on Enterprise plans                    │
+  │     • No model training on customer data (permanently disabled)      │
+  │     • Enterprise SSO/SCIM support                                    │
+  │     • Well-defined shared responsibility model                       │
+  │     • All US-based infrastructure with no China-based providers      │
+  │     • Active bug bounty and vulnerability disclosure programs        │
+  │     • 24/7/365 monitoring and incident response                      │
+  │                                                                      │
+  │   CONDITIONAL ON:                                                    │
+  │                                                                      │
+  │     1. Enterprise plan activation                                    │
+  │     2. SSO enforcement (exclusive mode, disable passwords)           │
+  │     3. SCIM Directory Sync configuration                             │
+  │     4. Developer security training completion                        │
+  │     5. Secret rotation playbook establishment                        │
+  │     6. Periodic audit log review cadence                             │
+  │                                                                      │
+  └──────────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+  19. REFERENCE LINKS & SOURCE DOCUMENTATION
+================================================================================
+
+  PRIMARY SECURITY DOCUMENTATION:
+
+    Ampcode Security Reference
+    https://ampcode.com/security
+
+    Sourcegraph Security Page
+    https://sourcegraph.com/security
+
+    Sourcegraph Security Trust Portal (SOC 2, Pentest, ISO reports)
+    https://security.sourcegraph.com/
+
+    Amp Trust Center
+    https://trust.ampcode.com/
+
+
+  LEGAL & PRIVACY:
+
+    Privacy Policy
+    https://sourcegraph.com/terms/privacy
+
+    Terms of Service
+    https://sourcegraph.com/terms
+
+    Subprocessors List
+    https://sourcegraph.com/terms/subprocessors
+
+    Cookie Policy
+    https://sourcegraph.com/terms/cookie-policy/
+
+
+  TECHNICAL DOCUMENTATION:
+
+    SBOM Documentation
+    https://sourcegraph.com/docs/cli/how-tos/fetch_sboms
+
+    Repository Permissions Configuration
+    https://sourcegraph.com/docs/admin/permissions
+
+    No BYOK Policy Explanation
+    https://ampcode.com/news/no-more-byok
+
+
+  OPERATIONAL:
+
+    System Status (Real-Time)
+    https://sourcegraphstatus.com/
+
+
+  SECURITY CONTACTS:
+
+    General Security Inquiries
+    security@ampcode.com
+
+    Vulnerability Disclosure
+    disclosure@ampcode.com
+
+    Sourcegraph Security Team
+    security@sourcegraph.com
+
+    Privacy Inquiries
+    privacy@sourcegraph.com
+
+
+================================================================================
+  20. DOCUMENT CONTROL
+================================================================================
+
+  Document Title:   Cybersecurity Assessment Report: Ampcode & Sourcegraph
+  Version:          1.0
+  Date:             March 19, 2026
+  Classification:   Confidential — Internal Use Only
+  Author:           Information Security Assessment Team
+  Distribution:     CISO, Security Review Committee
+  Review Cycle:     Quarterly (next review: June 2026)
+
+  DISCLAIMER:
+
+  This assessment is based on publicly available security documentation
+  from Sourcegraph and Ampcode as of the assessment date. It should be
+  supplemented with:
+
+    - Direct vendor engagement and security questionnaire responses
+    - NDA-protected document review (SOC 2 Type II report, penetration
+      test reports)
+    - Internal risk committee evaluation
+    - Legal review of terms of service and data processing agreements
+
+  The security landscape evolves continuously. This assessment represents
+  a point-in-time evaluation and should be reviewed periodically.
+
+
+================================================================================
+                    END OF REPORT — CONFIDENTIAL
+================================================================================
