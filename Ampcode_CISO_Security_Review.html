@@ -1,0 +1,1638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CISO Security Review — Ampcode (Sourcegraph) Enterprise Readiness Assessment</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --bg-primary: #050B18;
+    --bg-slide: #0A1628;
+    --bg-card: #111D33;
+    --accent-red: #E21E26;
+    --accent-cyan: #00BFFF;
+    --accent-green: #00E676;
+    --accent-yellow: #FFD700;
+    --accent-orange: #FF9100;
+    --text-primary: #FFFFFF;
+    --text-secondary: #A0B4CC;
+    --text-muted: #5A7A9A;
+    --border: #1A2D48;
+    --gradient-red: linear-gradient(135deg, #E21E26, #FF4444);
+    --gradient-cyan: linear-gradient(135deg, #00BFFF, #0080FF);
+    --gradient-green: linear-gradient(135deg, #00E676, #00C853);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-snap-type: y mandatory;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* Navigation */
+  .nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: rgba(5, 11, 24, 0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .nav-brand img {
+    height: 36px;
+    width: auto;
+    border-radius: 6px;
+  }
+
+  .nav-brand-text {
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.3px;
+  }
+
+  .nav-brand-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 400;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 6px;
+    list-style: none;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .nav-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  .nav-links a:hover {
+    color: var(--text-primary);
+    background: rgba(0, 191, 255, 0.1);
+  }
+
+  /* Slide System */
+  .slide {
+    min-height: 100vh;
+    scroll-snap-align: start;
+    padding: 100px 60px 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .slide::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(0, 191, 255, 0.03) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(226, 30, 38, 0.02) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .slide-number {
+    position: absolute;
+    top: 90px;
+    right: 60px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .slide-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Title Slide */
+  .title-slide {
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .title-slide .logo-container {
+    margin-bottom: 40px;
+  }
+
+  .title-slide .logo-container img {
+    height: 120px;
+    width: auto;
+    border-radius: 16px;
+    box-shadow: 0 0 60px rgba(226, 30, 38, 0.3), 0 0 120px rgba(0, 191, 255, 0.15);
+  }
+
+  .title-slide h1 {
+    font-size: 48px;
+    font-weight: 900;
+    letter-spacing: -1.5px;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #FFFFFF, #A0B4CC);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.15;
+  }
+
+  .title-slide .subtitle {
+    font-size: 20px;
+    color: var(--accent-cyan);
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+
+  .title-slide .meta {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 30px;
+    line-height: 2;
+  }
+
+  .classification-badge {
+    display: inline-block;
+    padding: 6px 20px;
+    background: rgba(226, 30, 38, 0.15);
+    border: 1px solid rgba(226, 30, 38, 0.4);
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #FF6B6B;
+    margin-top: 20px;
+  }
+
+  /* Section Headers */
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent-cyan);
+    margin-bottom: 12px;
+  }
+
+  h2 {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+    line-height: 1.2;
+  }
+
+  h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+  }
+
+  .slide-intro {
+    font-size: 16px;
+    color: var(--text-secondary);
+    max-width: 700px;
+    margin-bottom: 40px;
+    line-height: 1.7;
+  }
+
+  /* Cards Grid */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card:hover {
+    border-color: rgba(0, 191, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  .card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+
+  .card-icon.red { background: rgba(226, 30, 38, 0.15); }
+  .card-icon.cyan { background: rgba(0, 191, 255, 0.15); }
+  .card-icon.green { background: rgba(0, 230, 118, 0.15); }
+  .card-icon.yellow { background: rgba(255, 215, 0, 0.15); }
+  .card-icon.orange { background: rgba(255, 145, 0, 0.15); }
+
+  .card h4 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--text-primary);
+  }
+
+  .card p, .card li {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  .card ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .card ul li {
+    padding: 4px 0;
+    padding-left: 18px;
+    position: relative;
+  }
+
+  .card ul li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--accent-green);
+    font-weight: 700;
+    font-size: 12px;
+  }
+
+  /* Status Badges */
+  .badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .badge-green { background: rgba(0, 230, 118, 0.15); color: var(--accent-green); border: 1px solid rgba(0, 230, 118, 0.3); }
+  .badge-cyan { background: rgba(0, 191, 255, 0.15); color: var(--accent-cyan); border: 1px solid rgba(0, 191, 255, 0.3); }
+  .badge-yellow { background: rgba(255, 215, 0, 0.15); color: var(--accent-yellow); border: 1px solid rgba(255, 215, 0, 0.3); }
+  .badge-red { background: rgba(226, 30, 38, 0.15); color: #FF6B6B; border: 1px solid rgba(226, 30, 38, 0.3); }
+  .badge-orange { background: rgba(255, 145, 0, 0.15); color: var(--accent-orange); border: 1px solid rgba(255, 145, 0, 0.3); }
+
+  /* Table */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 13px;
+  }
+
+  .data-table thead th {
+    text-align: left;
+    padding: 12px 16px;
+    background: rgba(0, 191, 255, 0.06);
+    border-bottom: 1px solid var(--border);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--accent-cyan);
+  }
+
+  .data-table tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(26, 45, 72, 0.5);
+    color: var(--text-secondary);
+    vertical-align: top;
+  }
+
+  .data-table tbody tr:hover td {
+    background: rgba(0, 191, 255, 0.03);
+  }
+
+  /* Risk Matrix */
+  .risk-matrix {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 20px;
+  }
+
+  .risk-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .risk-level {
+    min-width: 80px;
+    text-align: center;
+    padding: 6px 0;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .risk-low { background: rgba(0, 230, 118, 0.12); color: var(--accent-green); border: 1px solid rgba(0, 230, 118, 0.3); }
+  .risk-medium { background: rgba(255, 215, 0, 0.12); color: var(--accent-yellow); border: 1px solid rgba(255, 215, 0, 0.3); }
+  .risk-high { background: rgba(255, 145, 0, 0.12); color: var(--accent-orange); border: 1px solid rgba(255, 145, 0, 0.3); }
+
+  .risk-details h5 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .risk-details p {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* Warning Box */
+  .callout {
+    border-radius: 10px;
+    padding: 24px;
+    margin: 20px 0;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .callout-info {
+    background: rgba(0, 191, 255, 0.06);
+    border: 1px solid rgba(0, 191, 255, 0.2);
+  }
+
+  .callout-warn {
+    background: rgba(255, 215, 0, 0.06);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+  }
+
+  .callout-danger {
+    background: rgba(226, 30, 38, 0.06);
+    border: 1px solid rgba(226, 30, 38, 0.2);
+  }
+
+  .callout-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .callout-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  .callout-text strong {
+    color: var(--text-primary);
+  }
+
+  /* Two Column */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-top: 20px;
+  }
+
+  /* Reference Links */
+  .ref-link {
+    color: var(--accent-cyan);
+    text-decoration: none;
+    font-weight: 500;
+    border-bottom: 1px dotted rgba(0, 191, 255, 0.4);
+    transition: all 0.2s;
+  }
+
+  .ref-link:hover {
+    color: #66D9FF;
+    border-bottom-color: #66D9FF;
+  }
+
+  /* Checklist */
+  .checklist {
+    list-style: none;
+    padding: 0;
+  }
+
+  .checklist li {
+    padding: 10px 0;
+    padding-left: 32px;
+    position: relative;
+    font-size: 14px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(26, 45, 72, 0.4);
+    line-height: 1.6;
+  }
+
+  .checklist li::before {
+    content: '☐';
+    position: absolute;
+    left: 0;
+    font-size: 16px;
+    color: var(--accent-cyan);
+  }
+
+  /* Architecture Diagram */
+  .arch-diagram {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 40px;
+    margin: 20px 0;
+    text-align: center;
+  }
+
+  .arch-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 20px 0;
+  }
+
+  .arch-box {
+    padding: 14px 22px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    min-width: 140px;
+  }
+
+  .arch-box.client { background: rgba(0, 191, 255, 0.12); border: 1px solid rgba(0, 191, 255, 0.3); color: var(--accent-cyan); }
+  .arch-box.server { background: rgba(226, 30, 38, 0.12); border: 1px solid rgba(226, 30, 38, 0.3); color: #FF6B6B; }
+  .arch-box.provider { background: rgba(255, 215, 0, 0.12); border: 1px solid rgba(255, 215, 0, 0.3); color: var(--accent-yellow); }
+  .arch-box.infra { background: rgba(0, 230, 118, 0.12); border: 1px solid rgba(0, 230, 118, 0.3); color: var(--accent-green); }
+
+  .arch-arrow {
+    font-size: 20px;
+    color: var(--text-muted);
+  }
+
+  .arch-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+
+  /* Footer */
+  .slide-footer {
+    position: absolute;
+    bottom: 30px;
+    left: 60px;
+    right: 60px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+
+  /* Compliance Grid */
+  .compliance-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin: 30px 0;
+  }
+
+  .compliance-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 16px;
+    text-align: center;
+    transition: all 0.3s;
+  }
+
+  .compliance-item:hover {
+    border-color: rgba(0, 230, 118, 0.3);
+    transform: translateY(-2px);
+  }
+
+  .compliance-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+  }
+
+  .compliance-name {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .compliance-status {
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* Responsibility Split */
+  .split-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 20px;
+  }
+
+  .split-col {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 28px;
+    border: 1px solid var(--border);
+  }
+
+  .split-col h4 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .split-col ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .split-col ul li {
+    padding: 8px 0;
+    padding-left: 24px;
+    position: relative;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    border-bottom: 1px solid rgba(26, 45, 72, 0.3);
+  }
+
+  .split-col ul li:last-child { border-bottom: none; }
+
+  .split-col.vendor ul li::before {
+    content: '🔒';
+    position: absolute;
+    left: 0;
+    font-size: 12px;
+  }
+
+  .split-col.customer ul li::before {
+    content: '⚠️';
+    position: absolute;
+    left: 0;
+    font-size: 12px;
+  }
+
+  .verdict-box {
+    background: var(--bg-card);
+    border: 2px solid rgba(0, 230, 118, 0.3);
+    border-radius: 16px;
+    padding: 36px;
+    text-align: center;
+    margin: 30px 0;
+  }
+
+  .verdict-box h3 {
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+
+  .verdict-box .verdict-score {
+    font-size: 64px;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+    margin: 16px 0;
+  }
+
+  .verdict-box p {
+    color: var(--text-secondary);
+    font-size: 14px;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* Print */
+  @media print {
+    .nav { display: none; }
+    .slide { page-break-after: always; min-height: auto; padding: 40px; }
+    body { background: #fff; color: #000; }
+  }
+
+  /* Tablet */
+  @media (max-width: 1024px) {
+    .slide { padding: 90px 32px 50px; }
+    .cards-grid { grid-template-columns: repeat(2, 1fr); }
+    .compliance-grid { grid-template-columns: repeat(3, 1fr); }
+    .nav-links a { font-size: 11px; padding: 5px 8px; }
+    .slide-footer { left: 32px; right: 32px; flex-wrap: wrap; gap: 8px; }
+  }
+
+  /* Mobile landscape / small tablet */
+  @media (max-width: 768px) {
+    .slide { padding: 80px 20px 60px; min-height: auto; }
+    .cards-grid, .two-col, .split-container, .risk-matrix { grid-template-columns: 1fr; }
+    .compliance-grid { grid-template-columns: repeat(3, 1fr); }
+    .nav-links { display: none; }
+    .nav { padding: 0 16px; height: 56px; }
+    .nav-brand img { height: 28px; }
+    .nav-brand-text { font-size: 15px; }
+    .nav-brand-sub { font-size: 10px; }
+    h2 { font-size: 26px; }
+    .title-slide h1 { font-size: 30px; }
+    .slide-intro { font-size: 14px; }
+    .slide-number { top: 74px; right: 20px; font-size: 10px; }
+    .slide-footer { position: relative; bottom: auto; left: auto; right: auto; margin-top: 30px; flex-direction: column; gap: 6px; font-size: 10px; }
+    .arch-flow { flex-direction: column; gap: 8px; }
+    .arch-arrow { transform: rotate(90deg); }
+    .data-table { font-size: 11px; }
+    .data-table thead th { font-size: 10px; padding: 8px 10px; }
+    .data-table tbody td { padding: 8px 10px; }
+    .card { padding: 20px; }
+    .callout { flex-direction: column; gap: 10px; padding: 16px; }
+    .risk-item { flex-direction: column; gap: 10px; }
+    .risk-level { min-width: auto; width: fit-content; }
+    .verdict-box { padding: 24px 16px; }
+    .verdict-box .verdict-score { font-size: 48px; }
+    .checklist li { font-size: 13px; }
+  }
+
+  /* Small mobile */
+  @media (max-width: 480px) {
+    .slide { padding: 70px 14px 50px; }
+    h2 { font-size: 22px; letter-spacing: -0.5px; }
+    .title-slide h1 { font-size: 24px; }
+    .title-slide .subtitle { font-size: 16px; }
+    .title-slide .meta { font-size: 12px; }
+    .title-slide .logo-container img { height: 80px; }
+    .section-label { font-size: 10px; letter-spacing: 2px; }
+    .compliance-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .compliance-item { padding: 16px 10px; }
+    .compliance-icon { font-size: 24px; }
+    .compliance-name { font-size: 12px; }
+    .card-icon { width: 36px; height: 36px; font-size: 16px; }
+    .card h4 { font-size: 15px; }
+    .card p, .card li { font-size: 12px; }
+    .data-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .classification-badge { font-size: 10px; padding: 5px 14px; }
+    .split-col ul li { font-size: 12px; }
+    .callout-text { font-size: 12px; }
+    .verdict-box .verdict-score { font-size: 40px; }
+    .verdict-box p { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="nav">
+  <div class="nav-brand">
+    <img src="Ampcode.png" alt="Ampcode Logo">
+    <div>
+      <div class="nav-brand-text">Ampcode Security Review</div>
+      <div class="nav-brand-sub">CISO Assessment Report</div>
+    </div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#compliance">Compliance</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#data">Data Security</a></li>
+    <li><a href="#infra">Infrastructure</a></li>
+    <li><a href="#auth">Auth & IAM</a></li>
+    <li><a href="#secrets">Secrets</a></li>
+    <li><a href="#providers">Providers</a></li>
+    <li><a href="#risk">Risk Matrix</a></li>
+    <li><a href="#shared">Shared Model</a></li>
+    <li><a href="#recommendations">Actions</a></li>
+    <li><a href="#verdict">Verdict</a></li>
+  </ul>
+</nav>
+
+<!-- SLIDE 1: Title -->
+<section class="slide title-slide" id="title">
+  <div class="slide-content">
+    <div class="logo-container">
+      <img src="Ampcode.png" alt="Ampcode">
+    </div>
+    <h1>Enterprise Security Assessment<br>Ampcode & Sourcegraph</h1>
+    <div class="subtitle">CISO-Level Cybersecurity Readiness Review</div>
+    <p class="meta">
+      Prepared for: Chief Information Security Officer<br>
+      Assessment Date: March 19, 2026<br>
+      Classification: Internal — Restricted Distribution<br>
+      Scope: Ampcode AI Coding Agent · Sourcegraph Code Search Platform
+    </p>
+    <div class="classification-badge">Confidential — Internal Use Only</div>
+  </div>
+  <div class="slide-footer">
+    <span>Ampcode CISO Security Assessment 2026</span>
+    <span>Slide 1 of 12</span>
+  </div>
+</section>
+
+<!-- SLIDE 2: Executive Overview -->
+<section class="slide" id="overview">
+  <div class="slide-number">02 / 12</div>
+  <div class="slide-content">
+    <div class="section-label">Executive Summary</div>
+    <h2>Security Posture Overview</h2>
+    <p class="slide-intro">
+      Ampcode is an AI-powered coding agent built by <a class="ref-link" href="https://sourcegraph.com" target="_blank">Sourcegraph, Inc.</a> — a company trusted by Reddit, Uber, Dropbox, Databricks, and other Fortune-500 engineering organizations.
+      This assessment evaluates Ampcode and Sourcegraph's security posture against enterprise requirements.
+    </p>
+
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-icon cyan">🏛️</div>
+        <h4>Compliance Certifications</h4>
+        <p>SOC 2 Type II · ISO/IEC 27001:2022 · GDPR · CCPA · EU AI Act compliant. Annual third-party penetration testing across full stack.</p>
+        <br><span class="badge badge-green">Verified</span>
+      </div>
+      <div class="card">
+        <div class="card-icon green">🔐</div>
+        <h4>Data Protection</h4>
+        <p>Enterprise plan provides <strong style="color:#fff">zero data retention</strong> on all LLM providers. AES-256 encryption at rest. TLS 1.2+ in transit. No model training on customer data.</p>
+        <br><span class="badge badge-green">Enterprise-Grade</span>
+      </div>
+      <div class="card">
+        <div class="card-icon red">🛡️</div>
+        <h4>Infrastructure</h4>
+        <p>Hosted on Google Cloud Platform (US). Terraform-managed infrastructure. Segregated customer environments. All US-based service providers — no China-based infrastructure.</p>
+        <br><span class="badge badge-green">Hardened</span>
+      </div>
+      <div class="card">
+        <div class="card-icon yellow">🔑</div>
+        <h4>Authentication & Access</h4>
+        <p>Enterprise SSO via Okta/SAML/OIDC. Directory Sync (SCIM) for auto-provisioning. Audit logging. Role-based workspace controls.</p>
+        <br><span class="badge badge-green">Enterprise SSO</span>
+      </div>
+    </div>
+
+    <div class="callout callout-info" style="margin-top:30px">
+      <div class="callout-icon">ℹ️</div>
+      <div class="callout-text">
+        <strong>System Status:</strong> As of March 19, 2026, Sourcegraph reports all systems fully operational.
+        Real-time monitoring available at <a class="ref-link" href="https://sourcegraphstatus.com/" target="_blank">sourcegraphstatus.com</a>.
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Sources: <a class="ref-link" href="https://ampcode.com/security" target="_blank">ampcode.com/security</a> · <a class="ref-link" href="https://security.sourcegraph.com/" target="_blank">security.sourcegraph.com</a></span>
+    <span>Slide 2 of 12</span>
+  </div>
+</section>
+
+<!-- SLIDE 3: Compliance & Certifications -->
+<section class="slide" id="compliance">
+  <div class="slide-number">03 / 12</div>
+  <div class="slide-content">
+    <div class="section-label">Trust & Compliance</div>
+    <h2>Certifications & Third-Party Assessments</h2>
+    <p class="slide-intro">
+      Sourcegraph maintains a comprehensive compliance program verified by independent auditors.
+      All certifications and reports are available through the
+      <a class="ref-link" href="https://security.sourcegraph.com/" target="_blank">Security Trust Portal</a>
+      and <a class="ref-link" href="https://trust.ampcode.com/" target="_blank">Amp Trust Portal</a>.
+    </p>
+
+    <div class="compliance-grid">
+      <div class="compliance-item">
+        <div class="compliance-icon">🛡️</div>
+        <div class="compliance-name">SOC 2 Type II</div>
+        <div class="compliance-status badge-green" style="color:var(--accent-green)">✓ Certified</div>
+      </div>
+      <div class="compliance-item">
+        <div class="compliance-icon">🌐</div>
+        <div class="compliance-name">ISO 27001:2022</div>
+        <div class="compliance-status badge-green" style="color:var(--accent-green)">✓ Certified</div>
+      </div>
+      <div class="compliance-item">
+        <div class="compliance-icon">🇪🇺</div>
+        <div class="compliance-name">GDPR</div>
+        <div class="compliance-status badge-green" style="color:var(--accent-green)">✓ Compliant</div>
+      </div>
+      <div class="compliance-item">
+        <div class="compliance-icon">🇺🇸</div>
+        <div class="compliance-name">CCPA</div>
+        <div class="compliance-status badge-green" style="color:var(--accent-green)">✓ Compliant</div>
+      </div>
+      <div class="compliance-item">
+        <div class="compliance-icon">🤖</div>
+        <div class="compliance-name">EU AI Act</div>
+        <div class="compliance-status badge-green" style="color:var(--accent-green)">✓ Compliant</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <h4>Security Assessments</h4>
+        <ul>
+          <li>Annual third-party penetration testing (full stack: clients, backend, infrastructure)</li>
+          <li>Containers scanned for CVEs using GCP-native tooling</li>
+          <li>Software components monitored continuously for CVEs</li>
+          <li>Internal security audits conducted regularly</li>
+          <li>Signed SBOMs published for container images</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Security Development Lifecycle</h4>
+        <ul>
+          <li>Mandatory code reviews for all changes</li>
+          <li>Security-sensitive changes reviewed by security team</li>
+          <li>End-to-end auth/authz test coverage</li>
+          <li>Secrets managed via vault — never in code</li>
+          <li>Distroless Docker images for minimal attack surface</li>
+          <li>Secure software supply chain practices</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout callout-info" style="margin-top:20px">
+      <div class="callout-icon">📄</div>
+      <div class="callout-text">
+        <strong>Document Access:</strong> SOC 2 report, penetration test reports, ISO 27001 certificate, and security brief 
+        are available upon request via the <a class="ref-link" href="https://security.sourcegraph.com/" target="_blank">Security Trust Portal</a>.
+        Amp-specific reports at <a class="ref-link" href="https://trust.ampcode.com/" target="_blank">trust.ampcode.com</a>.
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Sources: <a class="ref-link" href="https://sourcegraph.com/security" target="_blank">sourcegraph.com/security</a> · <a class="ref-link" href="https://security.sourcegraph.com/" target="_blank">security.sourcegraph.com</a></span>
+    <span>Slide 3 of 12</span>
+  </div>
+</section>
+
+<!-- SLIDE 4: Architecture -->
+<section class="slide" id="architecture">
+  <div class="slide-number">04 / 12</div>
+  <div class="slide-content">
+    <div class="section-label">System Architecture</div>
+    <h2>Ampcode — Component Architecture & Data Flow</h2>
+    <p class="slide-intro">
+      Ampcode operates as a two-component system. The client runs locally; the server is a multi-tenant cloud service.
+      The client <strong>never clones, indexes, or stores the entire codebase</strong> — only relevant snippets are sent as LLM context.
+    </p>
+
+    <div class="arch-diagram">
+      <div style="font-size:13px; color:var(--text-muted); margin-bottom:20px; letter-spacing:1px; text-transform:uppercase; font-weight:600;">Data Flow Architecture</div>
+      <div class="arch-flow">
+        <div>
+          <div class="arch-box client">👨‍💻 Amp Client<br><small style="font-weight:400;font-size:11px">CLI / VS Code</small></div>
+          <div class="arch-label">Local Machine</div>
+        </div>
+        <div class="arch-arrow">→<br><small style="font-size:10px;color:var(--accent-green)">TLS 1.2+</small></div>
+        <div>
+          <div class="arch-box server">⚡ Amp Server<br><small style="font-weight:400;font-size:11px">ampcode.com (GCP)</small></div>
+          <div class="arch-label">Multi-tenant · AES-256</div>
+        </div>
+        <div class="arch-arrow">→<br><small style="font-size:10px;color:var(--accent-green)">TLS 1.2+</small></div>
+        <div>
+          <div class="arch-box provider">🧠 LLM Providers<br><small style="font-weight:400;font-size:11px">Anthropic · OpenAI · Google</small></div>
+          <div class="arch-label">Zero Retention (Enterprise)</div>
+        </div>
+      </div>
+      <div style="margin-top:20px">
+        <div class="arch-flow">
+          <div class="arch-box infra" style="min-width:auto;padding:10px 16px;font-size:12px">WorkOS (Auth/SSO)</div>
+          <div class="arch-box infra" style="min-width:auto;padding:10px 16px;font-size:12px">Stripe (Billing)</div>
+          <div class="arch-box infra" style="min-width:auto;padding:10px 16px;font-size:12px">Cloudflare (WAF)</div>
+          <div class="arch-box infra" style="min-width:auto;padding:10px 16px;font-size:12px">Parallel (Web Search)</div>
+        </div>
+        <div class="arch-label">Supporting Services — No code data exposure</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <h4>Amp Client (Local)</h4>
+        <ul>
+          <li>Provides local code context management</li>
+          <li>Stores credentials in secure local path</li>
+          <li>Best-effort avoidance of <code>.env</code> and credential files</li>
+          <li>Automatic secret redaction before transmission</li>
+          <li>Communicates only with <code>ampcode.com</code> domains</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Amp Server (Cloud)</h4>
+        <ul>
+          <li>Hosted on GCP with PostgreSQL (encrypted)</li>
+          <li>Handles auth, workspaces, thread storage</li>
+          <li>Proxies LLM inference — does NOT store entire codebase</li>
+          <li>Stores only partial code snippets in thread data</li>
+          <li>Thread deletion removes data within 30 days</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Source: <a class="ref-link" href="https://ampcode.com/security" target="_blank">ampcode.com/security — System Components</a></span>
+    <span>Slide 4 of 12</span>
+  </div>
+</section>
+
+<!-- SLIDE 5: Data Security & Retention -->
+<section class="slide" id="data">
+  <div class="slide-number">05 / 12</div>
+  <div class="slide-content">
+    <div class="section-label">Data Security</div>
+    <h2>Data Protection, Retention & Encryption</h2>
+    <p class="slide-intro">
+      Enterprise-grade data protection with zero LLM retention, volume-level encryption, and granular thread lifecycle management.
+    </p>
+
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-icon green">🔒</div>
+        <h4>Encryption Standards</h4>
+        <ul>
+          <li><strong style="color:#fff">In Transit:</strong> TLS 1.2+ for all traffic</li>
+          <li><strong style="color:#fff">At Rest:</strong> AES-256 volume-level encryption</li>
+          <li>Backups similarly encrypted</li>
+          <li>GCP-managed encryption keys</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-icon cyan">🚫</div>
+        <h4>Zero LLM Data Retention (Enterprise)</h4>
+        <ul>
+          <li>Enterprise plan: zero data retention on ALL LLM providers</li>
+          <li>No input/output text retained beyond inference time</li>
+          <li>Images: extremely limited retention for AUP compliance only</li>
+          <li>Amp does <strong style="color:#fff">NOT</strong> train models on your data</li>
+          <li>Training can <strong style="color:#fff">never</strong> be enabled on Enterprise plans</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-icon yellow">📋</div>
+        <h4>Thread Data Lifecycle</h4>
+        <ul>
+          <li>Thread data: messages, LLM responses, code snippets, attachments</li>
+          <li>Deleted threads: data removed within 30 days</li>
+          <li>Enterprise workspace threads owned by the organization</li>
+          <li>Private thread mode prevents workspace sharing</li>
+          <li>User deletion triggers personal thread cleanup</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-icon red">📍</div>
+        <h4>Data Residency & Scope</h4>
+        <ul>
+          <li>All data stored and processed in the United States</li>
+          <li>No infrastructure or providers based in China</li>
+          <li>Client never stores entire codebase</li>
+          <li>Only "partial code data" (snippets/files) sent as context</li>
+          <li>No personal data sold or shared for cross-contextual advertising</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout callout-warn" style="margin-top:20px">
+      <div class="callout-icon">⚡</div>
+      <div class="callout-text">
+        <strong>Key Distinction — "Partial Code Data":</strong> Ampcode sends snippets of or entire code files as LLM context on a per-request basis.
+        It does <strong>not</strong> clone, index, or bulk-transfer codebases. This is explicitly defined in the
+        <a class="ref-link" href="https://ampcode.com/security" target="_blank">security reference</a>.
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Sources: <a class="ref-link" href="https://ampcode.com/security" target="_blank">ampcode.com/security</a> · <a class="ref-link" href="https://sourcegraph.com/terms/privacy" target="_blank">Privacy Policy</a></span>
+    <span>Slide 5 of 12</span>
+  </div>
+</section>
+
+<!-- SLIDE 6: Infrastructure Security -->
+<section class="slide" id="infra">
+  <div class="slide-number">06 / 12</div>
+  <div class="slide-content">
+    <div class="section-label">Infrastructure Security</div>
+    <h2>Cloud Infrastructure & Operational Security</h2>
+    <p class="slide-intro">
+      Sourcegraph's infrastructure is hosted entirely on Google Cloud Platform, managed via Terraform, with defense-in-depth security controls.
+    </p>
+
+    <div class="two-col">
+      <div>
+        <div class="card" style="margin-bottom:20px">
+          <h4>Infrastructure Hardening</h4>
+          <ul>
+            <li>100% hosted on Google Cloud Platform (US regions)</li>
+            <li>Infrastructure-as-Code via Terraform</li>
+            <li>Segregated GCP environments per customer instance</li>
+            <li>All storage volumes encrypted at rest</li>
+            <li>Data encrypted in transit (code host ↔ cloud)</li>
+            <li>Firewall-restricted external access to production</li>
+            <li>Secrets stored in encrypted local drives or secret management service</li>
+            <li>Distroless Docker containers for minimal attack surface</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Access Control</h4>
+          <ul>
+            <li>Just-in-time access provisioning</li>
+            <li>Group-based permissions (least privilege)</li>
+            <li>Multi-factor authentication for all internal systems</li>
+            <li>Regular access reviews and revocation</li>
+            <li>SSO access for employee production access (logged & monitored)</li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:20px">
+          <h4>Monitoring & Incident Response</h4>
+          <ul>
+            <li>24×7×365 service availability monitoring</li>
+            <li>24×7×365 alert investigation and attack triage</li>
+            <li>Centralized service, application, and access logs</li>
+            <li>Log retention up to 365 days</li>
+            <li>Formal Security Incident Response Policy</li>
+            <li>Only restricted employees access customer instances</li>
+            <li>All access logged and monitored</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Network Security</h4>
+          <ul>
+            <li>Cloudflare WAF (Web Application Firewall)</li>
+            <li>Cloudflare Rate Limiting</li>
+            <li>DNS managed via Cloudflare</li>
+            <li>Monthly instance updates</li>
+            <li>Security patches per Vulnerability Management Policy</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Source: <a class="ref-link" href="https://sourcegraph.com/security" target="_blank">sourcegraph.com/security — Sourcegraph Cloud</a></span>
+    <span>Slide 6 of 12</span>
+  </div>
+</section>
+
+<!-- SLIDE 7: Authentication & IAM -->
+<section class="slide" id="auth">
+  <div class="slide-number">07 / 12</div>
+  <div class="slide-content">
+    <div class="section-label">Identity & Access Management</div>
+    <h2>Authentication, SSO & Audit Logging</h2>
+    <p class="slide-intro">
+      Ampcode Enterprise provides full enterprise-grade identity management including SSO, SCIM directory sync, and comprehensive audit logging.
+    </p>
+
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-icon cyan">🔑</div>
+        <h4>Single Sign-On (SSO)</h4>
+        <ul>
+          <li>SSO via Okta, SAML, OAuth, OpenID Connect</li>
+          <li>SSO can be set as <strong style="color:#fff">exclusive</strong> auth method (disable passwords)</li>
+          <li>Powered by <a class="ref-link" href="https://workos.com" target="_blank">WorkOS</a></li>
+          <li>HTTP Proxy auth also supported (self-hosted)</li>
+          <li>Workspace Admin configuration dashboard</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-icon green">👥</div>
+        <h4>Directory Sync (SCIM)</h4>
+        <ul>
+          <li>Automatic user provisioning on join</li>
+          <li>Automatic de-provisioning on leave</li>
+          <li>Group-based access management</li>
+          <li>Syncs with identity provider directory</li>
+          <li>Configured via Workspace Settings</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-icon yellow">📊</div>
+        <h4>Audit Logging</h4>
+        <ul>
+          <li>Authentication event logs for Workspace Admins</li>
+          <li>Comprehensive application audit logs (timestamps, actors, requests)</li>
+          <li>Audit logs retained minimum 30 days</li>
+          <li>Enterprise logs available on request for customer audits</li>
+          <li>Internal monitoring by Amp security team</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout callout-info" style="margin-top:20px">
+      <div class="callout-icon">🔗</div>
+      <div class="callout-text">
+        <strong>Network Requirements:</strong> If behind a corporate proxy, allowlist these domains:
+        <code style="color:var(--accent-cyan)">ampcode.com</code>,
+        <code style="color:var(--accent-cyan)">auth.ampcode.com</code>,
+        <code style="color:var(--accent-cyan)">authapi.ampcode.com</code>.
+        See <a class="ref-link" href="https://ampcode.com/security" target="_blank">Client Security documentation</a>.
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Source: <a class="ref-link" href="https://ampcode.com/security" target="_blank">ampcode.com/security — User Authentication & Audit Logging</a></span>
+    <span>Slide 7 of 12</span>
+  </div>
+</section>
+
+<!-- SLIDE 8: Secret Redaction -->
+<section class="slide" id="secrets">
+  <div class="slide-number">08 / 12</div>
+  <div class="slide-content">
+    <div class="section-label">Secret Protection</div>
+    <h2>Automatic Secret Redaction</h2>
+    <p class="slide-intro">
+      Ampcode includes built-in automatic secret detection and redaction at the lowest level of the system, 
+      preventing secrets from reaching LLMs, storage, or external services.
+    </p>
+
+    <div class="two-col">
+      <div>
+        <div class="card" style="margin-bottom:20px">
+          <h4>Supported Secret Types</h4>
+          <ul>
+            <li><strong style="color:#fff">Cloud Providers:</strong> AWS, Google Cloud, Azure credentials</li>
+            <li><strong style="color:#fff">Dev Platforms:</strong> GitHub, GitLab, Sourcegraph, Amp tokens</li>
+            <li><strong style="color:#fff">LLM Providers:</strong> OpenAI, Anthropic, HuggingFace API keys</li>
+            <li><strong style="color:#fff">Common Services:</strong> Stripe, Slack, npm tokens</li>
+            <li><strong style="color:#fff">Generic Patterns:</strong> API keys, webhook secrets, password fields</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>How It Works</h4>
+          <p style="margin-bottom:12px">Detected secrets are replaced with markers like:</p>
+          <code style="background:rgba(226,30,38,0.15); color:#FF6B6B; padding:6px 14px; border-radius:6px; font-size:13px; display:inline-block;">[REDACTED:amp]</code>
+          <p style="margin-top:12px">Redaction occurs <strong style="color:#fff">before</strong> data leaves the client — secrets never reach the LLM, local cache, or server.</p>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:20px">
+          <div class="callout callout-warn" style="margin:0">
+            <div class="callout-icon">⚠️</div>
+            <div class="callout-text">
+              <strong>Known Limitations (Best-Effort):</strong><br>
+              Secret redaction may not catch:<br>
+              • Secrets in non-standard or custom internal formats<br>
+              • Secrets that don't follow recognizable patterns<br>
+              • Encoded or obfuscated secrets<br><br>
+              <strong>If a secret is not redacted:</strong><br>
+              1. Edit the preceding message and resend (overwrites on server)<br>
+              2. Mark thread as private<br>
+              3. Rotate the exposed secret immediately
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h4>Client File Protections</h4>
+          <ul>
+            <li>Best-effort avoidance of <code>.env</code> files</li>
+            <li>Best-effort avoidance of other credential files</li>
+            <li>Credentials stored locally at secure path</li>
+            <li>New secret types added regularly — contact support to request</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Source: <a class="ref-link" href="https://ampcode.com/security" target="_blank">ampcode.com/security — Secret Redaction</a></span>
+    <span>Slide 8 of 12</span>
+  </div>
+</section>
+
+<!-- SLIDE 9: Service Providers & Subprocessors -->
+<section class="slide" id="providers">
+  <div class="slide-number">09 / 12</div>
+  <div class="slide-content">
+    <div class="section-label">Third-Party Providers</div>
+    <h2>Infrastructure & Service Providers — Data Exposure Map</h2>
+    <p class="slide-intro">
+      Complete mapping of all third-party providers, their locations, and what data they can access.
+      All providers are US-based. <strong>No China-based infrastructure.</strong>
+    </p>
+
+    <div style="overflow-x:auto">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Provider</th>
+            <th>Location</th>
+            <th>Data Exposure</th>
+            <th>Purpose</th>
+            <th>Risk Level</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong style="color:#fff">Google Cloud Platform</strong></td>
+            <td>🇺🇸 USA</td>
+            <td><span class="badge badge-yellow">Partial Code</span></td>
+            <td>Primary infrastructure, PostgreSQL, storage</td>
+            <td><span class="badge badge-green">Low</span></td>
+          </tr>
+          <tr>
+            <td><strong style="color:#fff">Anthropic (Claude)</strong></td>
+            <td>🇺🇸 USA</td>
+            <td><span class="badge badge-yellow">Partial Code</span></td>
+            <td>Primary LLM inference</td>
+            <td><span class="badge badge-green">Low</span></td>
+          </tr>
+          <tr>
+            <td><strong style="color:#fff">OpenAI</strong></td>
+            <td>🇺🇸 USA</td>
+            <td><span class="badge badge-yellow">Partial Code</span></td>
+            <td>LLM inference (select models)</td>
+            <td><span class="badge badge-green">Low</span></td>
+          </tr>
+          <tr>
+            <td><strong style="color:#fff">Google Vertex AI</strong></td>
+            <td>🇺🇸 USA</td>
+            <td><span class="badge badge-yellow">Partial Code</span></td>
+            <td>Gemini / Claude inference</td>
+            <td><span class="badge badge-green">Low</span></td>
+          </tr>
+          <tr>
+            <td><strong style="color:#fff">Amazon Bedrock</strong></td>
+            <td>🇺🇸 USA</td>
+            <td><span class="badge badge-yellow">Partial Code</span></td>
+            <td>Claude inference</td>
+            <td><span class="badge badge-green">Low</span></td>
+          </tr>
+          <tr>
+            <td><strong style="color:#fff">xAI</strong></td>
+            <td>🇺🇸 USA</td>
+            <td><span class="badge badge-yellow">Partial Code</span></td>
+            <td>LLM inference</td>
+            <td><span class="badge badge-green">Low</span></td>
+          </tr>
+          <tr>
+            <td><strong style="color:#fff">Fireworks</strong></td>
+            <td>🇺🇸 USA</td>
+            <td><span class="badge badge-yellow">Partial Code</span></td>
+            <td>Proprietary Amp model features</td>
+            <td><span class="badge badge-green">Low</span></td>
+          </tr>
+          <tr>
+            <td><strong style="color:#fff">Baseten</strong></td>
+            <td>🇺🇸 USA</td>
+            <td><span class="badge badge-yellow">Partial Code</span></td>
+            <td>Proprietary Amp model features</td>
+            <td><span class="badge badge-green">Low</span></td>
+          </tr>
+          <tr>
+            <td>Cloudflare</td>
+            <td>🇺🇸 USA</td>
+            <td><span class="badge badge-green">Metadata Only</span></td>
+            <td>WAF, DNS, Rate Limiting</td>
+            <td><span class="badge badge-green">Low</span></td>
+          </tr>
+          <tr>
+            <td>WorkOS</td>
+            <td>🇺🇸 USA</td>
+            <td><span class="badge badge-green">No Code</span></td>
+            <td>Authentication, SSO, User management</td>
+            <td><span class="badge badge-green">Low</span></td>
+          </tr>
+          <tr>
+            <td>Parallel</td>
+            <td>🇺🇸 USA</td>
+            <td><span class="badge badge-green">No Code</span></td>
+            <td>Web search / page retrieval</td>
+            <td><span class="badge badge-green">Low</span></td>
+          </tr>
+          <tr>
+            <td>Stripe</td>
+            <td>🇺🇸 USA</td>
+            <td><span class="badge badge-green">No Code</span></td>
+            <td>Billing & payments</td>
+            <td><span class="badge badge-green">Low</span></td>
+          </tr>
+          <tr>
+            <td>Sparkpost / Bird</td>
+            <td>🇺🇸 USA</td>
+            <td><span class="badge badge-green">No Code</span></td>
+            <td>Email delivery (10-day header retention)</td>
+            <td><span class="badge badge-green">Low</span></td>
+          </tr>
+          <tr>
+            <td>Sentry</td>
+            <td>🇺🇸 USA</td>
+            <td><span class="badge badge-orange">Error Data</span></td>
+            <td>Error monitoring / debugging</td>
+            <td><span class="badge badge-green">Low</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Sources: <a class="ref-link" href="https://ampcode.com/security" target="_blank">ampcode.com/security</a> · <a class="ref-link" href="https://sourcegraph.com/terms/subprocessors" target="_blank">Subprocessors List</a></span>
+    <span>Slide 9 of 12</span>
+  </div>
+</section>
+
+<!-- SLIDE 10: Risk Assessment -->
+<section class="slide" id="risk">
+  <div class="slide-number">10 / 12</div>
+  <div class="slide-content">
+    <div class="section-label">Risk Assessment</div>
+    <h2>Enterprise Risk Matrix</h2>
+    <p class="slide-intro">
+      Residual risk assessment after considering Ampcode's security controls. All identified risks are within acceptable enterprise thresholds.
+    </p>
+
+    <div class="risk-matrix">
+      <div class="risk-item">
+        <div class="risk-level risk-low">LOW</div>
+        <div class="risk-details">
+          <h5>Data at Rest Exposure</h5>
+          <p>AES-256 encryption, GCP-managed keys, segregated environments. Thread data deleted within 30 days of deletion request.</p>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-level risk-low">LOW</div>
+        <div class="risk-details">
+          <h5>Data in Transit Exposure</h5>
+          <p>TLS 1.2+ enforced on all connections. Cloudflare WAF provides additional protection. No plaintext transmissions.</p>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-level risk-low">LOW</div>
+        <div class="risk-details">
+          <h5>LLM Provider Data Leakage</h5>
+          <p>Enterprise zero-retention agreements with all LLM providers. No model training on customer data. Training permanently disabled on Enterprise plans.</p>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-level risk-low">LOW</div>
+        <div class="risk-details">
+          <h5>Authentication Bypass</h5>
+          <p>Enterprise SSO with SCIM, MFA-enforced, exclusive SSO mode available. Annual penetration testing validates auth controls.</p>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-level risk-medium">MEDIUM</div>
+        <div class="risk-details">
+          <h5>Secret Exposure via LLM Context</h5>
+          <p>Automatic redaction is best-effort — non-standard secrets may pass through. <strong style="color:#FFD700">Mitigation:</strong> Developer training, secret rotation policy, custom secret pattern requests.</p>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-level risk-medium">MEDIUM</div>
+        <div class="risk-details">
+          <h5>Prompt Injection / LLM Manipulation</h5>
+          <p>Inherent to all LLM-based agents. Ampcode has bash/tool execution capabilities. <strong style="color:#FFD700">Mitigation:</strong> User approval for destructive actions, bug bounty program covers prompt injection.</p>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-level risk-low">LOW</div>
+        <div class="risk-details">
+          <h5>Insider Threat (Vendor)</h5>
+          <p>Restricted employee access, JIT provisioning, SSO with MFA, access logged and monitored. Regular access reviews.</p>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-level risk-low">LOW</div>
+        <div class="risk-details">
+          <h5>Compliance & Regulatory Risk</h5>
+          <p>SOC 2 Type II, ISO 27001:2022, GDPR, CCPA, EU AI Act compliant. All data in US jurisdiction. No China-based providers.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Assessment based on published security documentation as of March 2026</span>
+    <span>Slide 10 of 12</span>
+  </div>
+</section>
+
+<!-- SLIDE 11: Shared Responsibility — YOUR RESPONSIBILITY -->
+<section class="slide" id="shared">
+  <div class="slide-number">11 / 12</div>
+  <div class="slide-content">
+    <div class="section-label">⚠️ Shared Responsibility Model</div>
+    <h2>What Ampcode Secures vs. What <em>You</em> Must Secure</h2>
+    <p class="slide-intro">
+      Like all cloud services, Ampcode operates under a shared responsibility model. Security is a partnership — 
+      here is exactly what the vendor handles versus what your organization must own.
+    </p>
+
+    <div class="split-container">
+      <div class="split-col vendor" style="border-color:rgba(0,230,118,0.3)">
+        <h4><span style="color:var(--accent-green)">🟢</span> Sourcegraph / Ampcode Responsibility</h4>
+        <ul>
+          <li>Application security (secure SDLC, code reviews, pentesting)</li>
+          <li>Infrastructure security (GCP hardening, firewall, WAF)</li>
+          <li>Encryption at rest (AES-256) and in transit (TLS 1.2+)</li>
+          <li>LLM provider zero-retention enforcement (Enterprise)</li>
+          <li>Automatic secret redaction engine</li>
+          <li>24/7/365 monitoring and incident response</li>
+          <li>SOC 2, ISO 27001 compliance maintenance</li>
+          <li>SSO/SCIM infrastructure and authentication security</li>
+          <li>Audit logging infrastructure</li>
+          <li>Security patch management and vulnerability remediation</li>
+          <li>Bug bounty program operation</li>
+          <li>Secure software supply chain (SBOMs, distroless images)</li>
+        </ul>
+      </div>
+      <div class="split-col customer" style="border-color:rgba(255,215,0,0.3)">
+        <h4><span style="color:var(--accent-yellow)">🟡</span> Your Organization's Responsibility</h4>
+        <ul>
+          <li><strong style="color:#fff">Access token management</strong> — secure storage, rotation, and revocation of tokens</li>
+          <li><strong style="color:#fff">Code host connection configuration</strong> — ensure correct repositories are linked and permissions are properly set</li>
+          <li><strong style="color:#fff">User access management</strong> — control who has access to your workspace and data</li>
+          <li><strong style="color:#fff">Repository permission configuration</strong> — enforce code host permissions</li>
+          <li><strong style="color:#fff">Secret hygiene</strong> — don't hardcode secrets; use vaults; train developers on non-standard secret risks</li>
+          <li><strong style="color:#fff">Thread privacy management</strong> — mark sensitive threads as private; review shared thread content</li>
+          <li><strong style="color:#fff">MCP server trust decisions</strong> — evaluate third-party MCP extensions before installation</li>
+          <li><strong style="color:#fff">Compliance awareness</strong> — understand how code sharing impacts your regulatory obligations</li>
+          <li><strong style="color:#fff">Developer training</strong> — educate teams on AI agent risks, prompt injection, and data exposure</li>
+          <li><strong style="color:#fff">Corporate proxy/firewall config</strong> — allowlist required Amp domains</li>
+          <li><strong style="color:#fff">Incident response coordination</strong> — maintain playbooks for secret exposure in LLM contexts</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout callout-danger" style="margin-top:24px">
+      <div class="callout-icon">🚨</div>
+      <div class="callout-text">
+        <strong>Critical Developer Guidance:</strong> AI coding agents like Ampcode can execute bash commands and read files on the developer's machine.
+        Developers must:<br>
+        • <strong>Never</strong> paste production secrets, credentials, or PII directly into prompts<br>
+        • <strong>Review</strong> agent-suggested commands before execution — especially <code>rm</code>, <code>curl</code>, <code>git push</code>, and network operations<br>
+        • <strong>Use</strong> <code>.env</code> files and vault-based secret management — Amp best-effort avoids reading these<br>
+        • <strong>Rotate</strong> any secret that may have been inadvertently exposed in a thread<br>
+        • <strong>Report</strong> any security concerns to <a class="ref-link" href="mailto:security@ampcode.com">security@ampcode.com</a>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Source: <a class="ref-link" href="https://sourcegraph.com/security" target="_blank">sourcegraph.com/security — Shared Security Model</a> · <a class="ref-link" href="https://ampcode.com/security" target="_blank">ampcode.com/security</a></span>
+    <span>Slide 11 of 12</span>
+  </div>
+</section>
+
+<!-- SLIDE 12: Recommendations & Verdict -->
+<section class="slide" id="recommendations">
+  <div class="slide-number">12 / 12</div>
+  <div class="slide-content">
+    <div class="section-label">Recommendations & Verdict</div>
+    <h2>CISO Action Items & Security Verdict</h2>
+
+    <div class="two-col">
+      <div>
+        <h3>Pre-Deployment Checklist</h3>
+        <ul class="checklist">
+          <li>Request and review SOC 2 Type II report via <a class="ref-link" href="https://security.sourcegraph.com/" target="_blank">Trust Portal</a></li>
+          <li>Request and review latest penetration test report via <a class="ref-link" href="https://trust.ampcode.com/" target="_blank">Amp Trust Portal</a></li>
+          <li>Confirm Enterprise plan activation (zero LLM data retention)</li>
+          <li>Configure SSO as exclusive authentication method</li>
+          <li>Set up SCIM Directory Sync with corporate IdP</li>
+          <li>Verify training is permanently disabled (Enterprise default)</li>
+          <li>Allowlist <code>ampcode.com</code>, <code>auth.ampcode.com</code>, <code>authapi.ampcode.com</code> on corporate proxy</li>
+          <li>Review and approve subprocessor list at <a class="ref-link" href="https://sourcegraph.com/terms/subprocessors" target="_blank">sourcegraph.com/terms/subprocessors</a></li>
+          <li>Establish secret rotation playbook for LLM-context exposure</li>
+          <li>Develop developer training program for AI agent security</li>
+          <li>Request application audit logs for initial baseline review</li>
+          <li>Review Amp <a class="ref-link" href="https://sourcegraph.com/terms/privacy" target="_blank">Privacy Policy</a> with Legal/DPO team</li>
+        </ul>
+      </div>
+      <div>
+        <div class="verdict-box">
+          <h3>Security Verdict</h3>
+          <div class="verdict-score">APPROVED</div>
+          <p style="margin-bottom:20px">
+            <span class="badge badge-green" style="font-size:13px;padding:6px 16px;">RECOMMENDED FOR ENTERPRISE USE</span>
+          </p>
+          <p>
+            Ampcode/Sourcegraph demonstrates a <strong style="color:#fff">mature enterprise security posture</strong> with SOC 2 Type II certification, 
+            ISO 27001:2022, comprehensive encryption, zero LLM data retention on Enterprise plans, SSO/SCIM support, 
+            and a well-defined shared responsibility model. All infrastructure is US-based with no China-based providers.
+          </p>
+          <p style="margin-top:16px">
+            <strong style="color:var(--accent-yellow)">Conditional on:</strong> Enterprise plan activation, SSO enforcement, 
+            developer training completion, and regular audit log reviews.
+          </p>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">📞</div>
+          <div class="callout-text">
+            <strong>Security Contacts:</strong><br>
+            General: <a class="ref-link" href="mailto:security@ampcode.com">security@ampcode.com</a><br>
+            Vulnerability Disclosure: <a class="ref-link" href="mailto:disclosure@ampcode.com">disclosure@ampcode.com</a><br>
+            Bug Bounty: <a class="ref-link" href="https://ampcode.com/security" target="_blank">ampcode.com/security — Bug Bounty</a><br>
+            Status: <a class="ref-link" href="https://sourcegraphstatus.com/" target="_blank">sourcegraphstatus.com</a><br>
+            Privacy: <a class="ref-link" href="mailto:privacy@sourcegraph.com">privacy@sourcegraph.com</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Ampcode CISO Security Assessment — March 2026 — All sources verified as of assessment date</span>
+    <span>Slide 12 of 12</span>
+  </div>
+</section>
+
+<!-- Reference Appendix -->
+<section class="slide" id="references" style="min-height:auto;padding-bottom:100px">
+  <div class="slide-content">
+    <div class="section-label">Appendix</div>
+    <h2>Reference Links & Source Documentation</h2>
+    <div style="margin-top:30px">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Document</th>
+            <th>URL</th>
+            <th>Type</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Ampcode Security Reference</td><td><a class="ref-link" href="https://ampcode.com/security" target="_blank">ampcode.com/security</a></td><td>Primary Source</td></tr>
+          <tr><td>Sourcegraph Security Page</td><td><a class="ref-link" href="https://sourcegraph.com/security" target="_blank">sourcegraph.com/security</a></td><td>Primary Source</td></tr>
+          <tr><td>Sourcegraph Security Trust Portal</td><td><a class="ref-link" href="https://security.sourcegraph.com/" target="_blank">security.sourcegraph.com</a></td><td>SOC 2 / Pentest / ISO</td></tr>
+          <tr><td>Amp Trust Center</td><td><a class="ref-link" href="https://trust.ampcode.com/" target="_blank">trust.ampcode.com</a></td><td>SOC 2 / Reports</td></tr>
+          <tr><td>Privacy Policy</td><td><a class="ref-link" href="https://sourcegraph.com/terms/privacy" target="_blank">sourcegraph.com/terms/privacy</a></td><td>Legal / Privacy</td></tr>
+          <tr><td>Subprocessors List</td><td><a class="ref-link" href="https://sourcegraph.com/terms/subprocessors" target="_blank">sourcegraph.com/terms/subprocessors</a></td><td>Data Processing</td></tr>
+          <tr><td>System Status</td><td><a class="ref-link" href="https://sourcegraphstatus.com/" target="_blank">sourcegraphstatus.com</a></td><td>Operational Status</td></tr>
+          <tr><td>Terms of Service</td><td><a class="ref-link" href="https://sourcegraph.com/terms" target="_blank">sourcegraph.com/terms</a></td><td>Legal</td></tr>
+          <tr><td>SBOM Documentation</td><td><a class="ref-link" href="https://sourcegraph.com/docs/cli/how-tos/fetch_sboms" target="_blank">sourcegraph.com/docs/cli/how-tos/fetch_sboms</a></td><td>Supply Chain</td></tr>
+          <tr><td>Repository Permissions</td><td><a class="ref-link" href="https://sourcegraph.com/docs/admin/permissions" target="_blank">sourcegraph.com/docs/admin/permissions</a></td><td>Configuration</td></tr>
+          <tr><td>No BYOK Policy</td><td><a class="ref-link" href="https://ampcode.com/news/no-more-byok" target="_blank">ampcode.com/news/no-more-byok</a></td><td>Architecture Decision</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="text-align:center; margin-top:50px; color:var(--text-muted); font-size:12px;">
+      <p>© 2026 — CISO Security Assessment Report — Prepared with Ampcode</p>
+      <p style="margin-top:8px">This document is based on publicly available security documentation and should be supplemented with 
+      direct vendor engagement, NDA-protected document review (SOC 2, pentest reports), and internal risk committee evaluation.</p>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
