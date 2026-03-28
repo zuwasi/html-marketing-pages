@@ -13,20 +13,20 @@ Last updated: 2026-03-28
 1. index.html
    https://zuwasi.github.io/Public-html-pages/index.html
 
-2. why-amp-doesnt-need-node9-proxy.html
-   https://zuwasi.github.io/Public-html-pages/why-amp-doesnt-need-node9-proxy.html
+2. 1goat_Report.html
+   https://zuwasi.github.io/Public-html-pages/1goat_Report.html
 
-3. Ampcode_CISO_Security_Review.html
-   https://zuwasi.github.io/Public-html-pages/Ampcode_CISO_Security_Review.html
-
-4. AI_Coding_Tools_Security_Comparison.html
+3. AI_Coding_Tools_Security_Comparison.html
    https://zuwasi.github.io/Public-html-pages/AI_Coding_Tools_Security_Comparison.html
 
-5. AI_Coding_Tools_Security_Comparison_Report.html
+4. AI_Coding_Tools_Security_Comparison_Report.html
    https://zuwasi.github.io/Public-html-pages/AI_Coding_Tools_Security_Comparison_Report.html
 
-6. 1goat_Report.html
-   https://zuwasi.github.io/Public-html-pages/1goat_Report.html
+5. Ampcode_CISO_Security_Review.html
+   https://zuwasi.github.io/Public-html-pages/Ampcode_CISO_Security_Review.html
+
+6. why-amp-doesnt-need-node9-proxy.html
+   https://zuwasi.github.io/Public-html-pages/why-amp-doesnt-need-node9-proxy.html
 
 ──────────────────────────────────────────────────────────────
   OTHER FILES
