@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>ESL SBOMator — Immune to the Trivy Supply Chain Attack</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+:root{
+  --bg:#0a0e1a;--card:#111827;--accent:#00e5ff;--accent2:#7c4dff;--red:#ff1744;
+  --orange:#ff9100;--green:#00e676;--yellow:#ffd600;--pink:#f50057;
+  --text:#e8eaf6;--muted:#90a4ae;--glass:rgba(255,255,255,0.06);
+}
+html,body{height:100%;font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden;-webkit-tap-highlight-color:transparent}
+
+/* Slide container */
+.deck{display:flex;transition:transform .45s cubic-bezier(.4,0,.2,1);height:100%;will-change:transform}
+.slide{min-width:100vw;height:100vh;display:flex;flex-direction:column;align-items:center;padding:clamp(16px,4vw,48px);overflow-y:auto;scroll-behavior:smooth;position:relative}
+.slide::-webkit-scrollbar{width:4px}
+.slide::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:4px}
+
+/* Gradient blobs */
+.slide::before{content:'';position:absolute;width:45vw;height:45vw;border-radius:50%;filter:blur(90px);opacity:.18;pointer-events:none;top:-10vw;right:-10vw}
+.s0::before{background:var(--accent)}
+.s1::before{background:var(--red)}
+.s2::before{background:var(--accent2)}
+.s3::before{background:var(--green)}
+.s4::before{background:var(--orange)}
+.s5::before{background:var(--pink)}
+.s6::before{background:var(--yellow)}
+.s7::before{background:var(--accent)}
+
+/* Typography */
+.tag{display:inline-block;font-size:clamp(10px,1.6vw,13px);font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:6px 16px;border-radius:999px;margin-bottom:12px}
+h1{font-size:clamp(26px,5vw,54px);font-weight:900;line-height:1.1;text-align:center;max-width:900px;margin-bottom:8px}
+h2{font-size:clamp(22px,4vw,42px);font-weight:800;line-height:1.15;text-align:center;max-width:850px}
+.subtitle{font-size:clamp(14px,2vw,20px);color:var(--muted);text-align:center;max-width:700px;margin-top:8px;line-height:1.5}
+
+/* Cards */
+.card-row{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin-top:20px;width:100%;max-width:1050px}
+.card{background:var(--glass);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:clamp(16px,2.5vw,28px);flex:1 1 260px;max-width:340px;backdrop-filter:blur(10px);transition:transform .2s}
+.card:hover{transform:translateY(-4px)}
+.card-icon{font-size:36px;margin-bottom:8px}
+.card h3{font-size:clamp(15px,1.8vw,19px);font-weight:700;margin-bottom:6px}
+.card p{font-size:clamp(12px,1.4vw,14px);color:var(--muted);line-height:1.55}
+
+/* Phase table */
+.phase-grid{display:grid;grid-template-columns:1fr;gap:12px;width:100%;max-width:900px;margin-top:16px}
+.phase-item{display:flex;align-items:flex-start;gap:14px;background:var(--glass);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:clamp(12px,2vw,20px)}
+.phase-num{font-size:clamp(22px,3vw,32px);font-weight:900;line-height:1;flex-shrink:0;width:44px;text-align:center}
+.phase-item h3{font-size:clamp(14px,1.6vw,17px);font-weight:700;margin-bottom:4px}
+.phase-item p{font-size:clamp(11px,1.3vw,13px);color:var(--muted);line-height:1.5}
+
+/* Comparison table */
+.cmp-table{width:100%;max-width:950px;border-collapse:separate;border-spacing:0;margin-top:16px;font-size:clamp(11px,1.3vw,14px)}
+.cmp-table th,.cmp-table td{padding:clamp(8px,1.2vw,14px) clamp(6px,1vw,12px);text-align:left}
+.cmp-table thead th{background:var(--accent2);color:#fff;font-weight:700}
+.cmp-table thead th:first-child{border-radius:12px 0 0 0}
+.cmp-table thead th:last-child{border-radius:0 12px 0 0}
+.cmp-table tbody tr{background:var(--glass)}
+.cmp-table tbody tr:nth-child(even){background:rgba(255,255,255,0.03)}
+.cmp-table tbody td{border-bottom:1px solid rgba(255,255,255,.05)}
+.cmp-table tbody tr:last-child td:first-child{border-radius:0 0 0 12px}
+.cmp-table tbody tr:last-child td:last-child{border-radius:0 0 12px 0}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-weight:700;font-size:11px}
+.badge.red{background:rgba(255,23,68,.15);color:var(--red)}
+.badge.green{background:rgba(0,230,118,.15);color:var(--green)}
+
+/* Detail box */
+.detail-box{background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:clamp(16px,2.5vw,28px);margin-top:20px;width:100%;max-width:950px}
+.detail-box h4{font-size:clamp(13px,1.5vw,16px);font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.detail-box p,.detail-box li{font-size:clamp(11px,1.3vw,13px);color:var(--muted);line-height:1.6}
+.detail-box ul{padding-left:20px;margin-top:6px}
+
+/* Big stat */
+.stat-row{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;margin-top:20px}
+.stat{text-align:center;min-width:120px}
+.stat .num{font-size:clamp(36px,6vw,64px);font-weight:900;line-height:1}
+.stat .label{font-size:clamp(11px,1.3vw,14px);color:var(--muted);margin-top:4px}
+
+/* Footer area */
+.slide-footer{margin-top:auto;padding-top:16px;width:100%;max-width:950px}
+
+/* Navigation */
+.nav-arrows{position:fixed;top:50%;z-index:100;transform:translateY(-50%)}
+.nav-arrows button{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;width:clamp(36px,5vw,52px);height:clamp(36px,5vw,52px);border-radius:50%;font-size:clamp(16px,2.2vw,22px);cursor:pointer;backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;transition:background .2s}
+.nav-arrows button:hover{background:var(--accent2)}
+.nav-arrows button:disabled{opacity:.2;pointer-events:none}
+#prevBtn{position:fixed;left:clamp(6px,1.5vw,16px)}
+#nextBtn{position:fixed;right:clamp(6px,1.5vw,16px)}
+
+/* Dots */
+.dots{position:fixed;bottom:clamp(10px,2vw,20px);left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:100}
+.dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.2);border:none;cursor:pointer;transition:all .25s}
+.dot.active{background:var(--accent);transform:scale(1.3)}
+
+/* Slide counter */
+.counter{position:fixed;top:clamp(10px,2vw,18px);right:clamp(10px,2vw,18px);font-size:12px;color:var(--muted);z-index:100;font-family:'JetBrains Mono',monospace}
+
+/* Highlight colors */
+.c-accent{color:var(--accent)}.c-red{color:var(--red)}.c-green{color:var(--green)}.c-orange{color:var(--orange)}.c-pink{color:var(--pink)}.c-yellow{color:var(--yellow)}.c-purple{color:var(--accent2)}
+
+/* Shield animation */
+@keyframes pulse{0%,100%{transform:scale(1);filter:drop-shadow(0 0 8px var(--green))}50%{transform:scale(1.08);filter:drop-shadow(0 0 20px var(--green))}}
+.shield{font-size:clamp(48px,10vw,96px);animation:pulse 2.5s ease-in-out infinite;margin-bottom:8px}
+
+/* Responsive */
+@media(max-width:600px){
+  .card{flex:1 1 100%;max-width:100%}
+  .cmp-table{font-size:11px}
+  .phase-item{flex-direction:column;gap:6px}
+}
+</style>
+</head>
+<body>
+
+<!-- SLIDE DECK -->
+<div class="deck" id="deck">
+
+<!-- ================= SLIDE 0 — TITLE ================= -->
+<section class="slide s0">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center">
+    <div class="shield">🛡️</div>
+    <span class="tag" style="background:rgba(0,229,255,.15);color:var(--accent)">Security Briefing · March 2026</span>
+    <h1>Why the <span class="c-red">Trivy Supply Chain Attack</span> Could <span class="c-green">Never Happen</span> with ESL SBOMator</h1>
+    <p class="subtitle">The most sophisticated attack on a security tool to date — and why our architecture makes it impossible.</p>
+    <div class="stat-row" style="margin-top:32px">
+      <div class="stat"><div class="num c-red">5</div><div class="label">Attack Phases</div></div>
+      <div class="stat"><div class="num c-green">0</div><div class="label">Apply to SBOMator</div></div>
+      <div class="stat"><div class="num c-accent">47+</div><div class="label">npm Packages Hit</div></div>
+    </div>
+  </div>
+  <div class="detail-box slide-footer">
+    <h4>📋 What is this presentation?</h4>
+    <p>On March 19, 2026, Aqua Security's <strong>Trivy</strong> — the most widely used open-source vulnerability scanner — was compromised in a multi-phase supply chain attack. This briefing explains each attack phase and demonstrates why ESL SBOMator's architecture is <strong>fundamentally immune</strong> to every single one.</p>
+  </div>
+</section>
+
+<!-- ================= SLIDE 1 — WHAT HAPPENED ================= -->
+<section class="slide s1">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;width:100%">
+    <span class="tag" style="background:rgba(255,23,68,.15);color:var(--red)">The Attack</span>
+    <h2>What Happened to <span class="c-red">Trivy</span>?</h2>
+    <p class="subtitle">A 5-phase attack turned the world's most popular security scanner into a weapon</p>
+    <div class="phase-grid">
+      <div class="phase-item"><div class="phase-num c-red">1</div><div><h3>Repository Takeover</h3><p>Attackers compromised the <code>aqua-bot</code> service account and pushed backdoored <code>v0.69.4</code> binaries to GitHub Releases, Docker Hub, GHCR & ECR.</p></div></div>
+      <div class="phase-item"><div class="phase-num c-orange">2</div><div><h3>GitHub Action Tag Poisoning</h3><p>Force-pushed <strong>75 of 76 version tags</strong> in <code>trivy-action</code>. Any workflow referencing <code>@v0.28.0</code> silently ran attacker code.</p></div></div>
+      <div class="phase-item"><div class="phase-num c-yellow">3</div><div><h3>Credential Theft from CI/CD Memory</h3><p>Malware read <code>/proc/&lt;pid&gt;/mem</code> on runners, stealing AWS keys, SSH keys, K8s tokens, Docker creds, TLS keys — encrypted with AES-256 + RSA-4096.</p></div></div>
+      <div class="phase-item"><div class="phase-num c-pink">4</div><div><h3>Persistent Backdoor</h3><p>Installed <code>sysmon.py</code> systemd service on dev machines polling a blockchain C2 every 50 minutes — resistant to takedown.</p></div></div>
+      <div class="phase-item"><div class="phase-num c-purple">5</div><div><h3>Self-Propagating npm Worm</h3><p><strong>CanisterWorm</strong> compromised 47+ npm packages in under 60 seconds, turning every <code>npm install</code> into a propagation vector.</p></div></div>
+    </div>
+  </div>
+  <div class="detail-box slide-footer">
+    <h4>🔍 Detailed Background</h4>
+    <p>Three weeks before the main attack, an autonomous bot (<em>hackerbot-claw</em>) exploited a misconfigured <code>pull_request_target</code> workflow to steal a Personal Access Token (PAT). Aqua rotated credentials — but <strong>incompletely</strong>. The surviving credentials became the entry point for TeamPCP (also tracked as DeadCatx3, PCPcat, ShellForce, CipherForce) to execute the full 5-phase chain. Exfiltrated data was sent to a typosquatted domain <code>scan.aquasecurtiy[.]org</code> and, as fallback, staged in public GitHub repos named <code>tpcp-docs</code>.</p>
+  </div>
+</section>
+
+<!-- ================= SLIDE 2 — WHY: Not a GitHub Action ================= -->
+<section class="slide s2">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;width:100%">
+    <span class="tag" style="background:rgba(124,77,255,.15);color:var(--accent2)">Defense #1</span>
+    <h2><span class="c-accent">Not a GitHub Action</span> = Zero Tag Poisoning Surface</h2>
+    <p class="subtitle">The core attack vector simply does not exist</p>
+    <div class="card-row">
+      <div class="card" style="border-color:rgba(255,23,68,.3)">
+        <div class="card-icon">💀</div>
+        <h3 class="c-red">Trivy (Vulnerable)</h3>
+        <p>Runs as a <strong>GitHub Action</strong> inside CI/CD pipelines. References mutable version tags (<code>@v0.28.0</code>). Attackers force-pushed 75 tags to run malicious code — <strong>no workflow file changes needed</strong>.</p>
+      </div>
+      <div class="card" style="border-color:rgba(0,230,118,.3)">
+        <div class="card-icon">🛡️</div>
+        <h3 class="c-green">SBOMator (Immune)</h3>
+        <p>Runs as a <strong>standalone commercial application</strong> on your machine. No GitHub Action, no mutable tags, no automated pipeline execution. <strong>The entire attack vector doesn't exist.</strong></p>
+      </div>
+    </div>
+  </div>
+  <div class="detail-box slide-footer">
+    <h4>📖 Technical Detail — Phase 2 Neutralized</h4>
+    <p>GitHub Actions version tags are <strong>mutable Git refs</strong> — anyone with push access can repoint them to arbitrary commits. Trivy users referencing <code>aquasecurity/trivy-action@v0.28.0</code> unknowingly executed attacker code after the tags were poisoned. The recommended mitigation is pinning to full SHA hashes, but most organizations don't do this. ESL SBOMator <strong>never enters this equation</strong> — it's installed as a desktop/CLI application, distributed through controlled commercial channels. There are no version tags to poison, no action marketplace listing to exploit, and no automated execution triggered by upstream changes.</p>
+  </div>
+</section>
+
+<!-- ================= SLIDE 3 — WHY: No CI/CD Access ================= -->
+<section class="slide s3">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;width:100%">
+    <span class="tag" style="background:rgba(0,230,118,.15);color:var(--green)">Defense #2</span>
+    <h2><span class="c-accent">Runs Outside CI/CD</span> = No Credential Theft</h2>
+    <p class="subtitle">SBOMator never touches your pipeline secrets</p>
+    <div class="card-row">
+      <div class="card" style="border-color:rgba(255,23,68,.3)">
+        <div class="card-icon">🔓</div>
+        <h3 class="c-red">What Trivy Stole</h3>
+        <p>Read <code>/proc/&lt;pid&gt;/mem</code> on CI runners to harvest:<br>
+        <span class="c-orange">AWS keys</span> · <span class="c-yellow">GCP/Azure creds</span> · <span class="c-pink">SSH keys</span> · <span class="c-red">K8s tokens</span> · <span class="c-purple">Docker creds</span> · <span class="c-accent">TLS private keys</span> · <span class="c-orange">DB passwords</span> · <span class="c-yellow">Crypto wallets</span></p>
+      </div>
+      <div class="card" style="border-color:rgba(0,230,118,.3)">
+        <div class="card-icon">🔒</div>
+        <h3 class="c-green">SBOMator's Position</h3>
+        <p>Runs on <strong>your own workstation</strong> or a dedicated analysis machine. Never executes inside a CI/CD runner. <strong>Has zero access to pipeline secrets, runner memory, or cloud credentials.</strong> Architecturally impossible.</p>
+      </div>
+    </div>
+    <div class="card-row">
+      <div class="card" style="border-color:rgba(0,229,255,.2);flex:1 1 100%;max-width:700px">
+        <div class="card-icon">🏗️</div>
+        <h3>Architecture Comparison</h3>
+        <p style="font-family:'JetBrains Mono',monospace;font-size:clamp(10px,1.2vw,13px);white-space:pre;line-height:1.7;color:var(--text)">Trivy:    CI Runner → <span class="c-red">Trivy Action</span> → reads /proc/mem → <span class="c-red">SECRETS STOLEN</span>
+SBOMator: Your PC  → <span class="c-green">SBOMator App</span> → scans source   → <span class="c-green">SBOM report</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="detail-box slide-footer">
+    <h4>📖 Technical Detail — Phase 3 Neutralized</h4>
+    <p>The Trivy malware bypassed GitHub's log-masking by reading raw process memory. It encrypted stolen data with <strong>AES-256-CBC + RSA-4096</strong> (defeating network inspection) and exfiltrated to <code>scan.aquasecurtiy[.]org</code>. As a fallback, it used the victim's own GitHub PAT to create a public repo for staging. None of this is possible with SBOMator because it <strong>never runs in a CI/CD context</strong> — it's a local tool that reads source files and lock files to produce an SBOM document. It doesn't have, need, or request access to any secrets.</p>
+  </div>
+</section>
+
+<!-- ================= SLIDE 4 — WHY: Commercial Distribution ================= -->
+<section class="slide s4">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;width:100%">
+    <span class="tag" style="background:rgba(255,145,0,.15);color:var(--orange)">Defense #3</span>
+    <h2><span class="c-accent">Commercial Distribution</span> = No Repository Takeover</h2>
+    <p class="subtitle">Controlled release channels eliminate the hijacking risk</p>
+    <div class="card-row">
+      <div class="card" style="border-color:rgba(255,23,68,.3)">
+        <div class="card-icon">⚠️</div>
+        <h3 class="c-red">Trivy's Problem</h3>
+        <p>Open-source with automated release pipelines. Compromised service account → backdoored binaries auto-distributed to <strong>GitHub Releases, Docker Hub, GHCR, and Amazon ECR</strong>. No human review.</p>
+      </div>
+      <div class="card" style="border-color:rgba(0,230,118,.3)">
+        <div class="card-icon">✅</div>
+        <h3 class="c-green">SBOMator's Model</h3>
+        <p><strong>Commercial product</strong> distributed through controlled channels. No public service account to hijack, no automated release pipeline, no container registries for attackers to tamper with.</p>
+      </div>
+      <div class="card" style="border-color:rgba(0,229,255,.2)">
+        <div class="card-icon">🔐</div>
+        <h3 class="c-accent">Built-In Supply Chain Hardening</h3>
+        <p>SBOMator secures <em>its own</em> supply chain: exact <strong>version pinning</strong>, <strong>lock files</strong>, <strong>SHA-256 hash verification</strong>, <strong>self-SBOM</strong>, Dependabot with <strong>manual PR review</strong> — no auto-merge.</p>
+      </div>
+    </div>
+  </div>
+  <div class="detail-box slide-footer">
+    <h4>📖 Technical Detail — Phase 1 Neutralized + Own Supply Chain Hardened</h4>
+    <p>SBOMator's <code>requirements.txt</code> uses exact pins (<code>==</code>) — not ranges (<code>&gt;=</code>). A <code>requirements.lock</code> file pins direct <em>and</em> transitive dependencies. Builds use <code>pip install --no-deps -r requirements.lock</code> for deterministic resolution. The project ships its own CycloneDX SBOM (<code>sbomator-self-sbom.cdx.json</code>) for self-auditing. Dependabot monitors for vulnerabilities but creates PRs for human review — never auto-merging. This multi-layered approach means even if an upstream Python package were compromised, it would not silently enter a SBOMator build.</p>
+  </div>
+</section>
+
+<!-- ================= SLIDE 5 — WHY: No Persistent Backdoor ================= -->
+<section class="slide s5">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;width:100%">
+    <span class="tag" style="background:rgba(245,0,87,.15);color:var(--pink)">Defense #4</span>
+    <h2><span class="c-accent">On-Demand Tool</span> = No Persistent Backdoor</h2>
+    <p class="subtitle">SBOMator runs, reports, and exits — no background services</p>
+    <div class="card-row">
+      <div class="card" style="border-color:rgba(255,23,68,.3)">
+        <div class="card-icon">👻</div>
+        <h3 class="c-red">Trivy's Backdoor</h3>
+        <p>Installed <code>sysmon.py</code> as a <strong>systemd service</strong> on developer machines. Polled a blockchain canister (ICP) every <strong>50 minutes</strong> for C2 instructions. Takedown-resistant.</p>
+      </div>
+      <div class="card" style="border-color:rgba(0,230,118,.3)">
+        <div class="card-icon">🧹</div>
+        <h3 class="c-green">SBOMator's Design</h3>
+        <p>A <strong>GUI/CLI application</strong> that runs on demand. Generates SBOM → produces report → <strong>exits</strong>. No system services installed. No background processes. No elevated privileges required.</p>
+      </div>
+    </div>
+    <div class="stat-row" style="margin-top:28px">
+      <div class="stat"><div class="num c-red">∞</div><div class="label">Trivy backdoor uptime</div></div>
+      <div class="stat"><div class="num" style="color:var(--green)">0</div><div class="label">SBOMator background processes</div></div>
+      <div class="stat"><div class="num c-orange">50 min</div><div class="label">Trivy C2 beacon interval</div></div>
+    </div>
+  </div>
+  <div class="detail-box slide-footer">
+    <h4>📖 Technical Detail — Phase 4 Neutralized</h4>
+    <p>The malicious Trivy binary deployed persistence by creating a systemd service masquerading as PostgreSQL tooling. It used the <strong>Internet Computer (ICP) blockchain</strong> for C2 — a decentralized network that cannot be taken down like a traditional server. The beacon ran every 50 minutes, receiving instructions for further compromise. SBOMator has <strong>no mechanism to install system services</strong>. It doesn't write to <code>/etc/systemd</code>, doesn't create launch agents, and doesn't register background tasks. It is architecturally incapable of hosting a persistent backdoor — even if hypothetically compromised, it would only survive until the application is closed.</p>
+  </div>
+</section>
+
+<!-- ================= SLIDE 6 — IRONY: SBOMator Detects It ================= -->
+<section class="slide s6">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;width:100%">
+    <span class="tag" style="background:rgba(255,214,0,.15);color:var(--yellow)">The Irony</span>
+    <h2>SBOMator <span class="c-green">Detects</span> the Attack That <span class="c-red">Hit Trivy</span></h2>
+    <p class="subtitle">Our Supply Chain Threat Intelligence module catches the aftermath</p>
+    <div class="card-row">
+      <div class="card" style="border-color:rgba(0,229,255,.2)">
+        <div class="card-icon">🔎</div>
+        <h3>IOC Auto-Checking</h3>
+        <p>Auto-downloads IOC lists from <strong>Wiz Security Research</strong>. Compares every package name + version against known malicious releases. Flags matches as <span class="c-red">CRITICAL</span>.</p>
+      </div>
+      <div class="card" style="border-color:rgba(0,229,255,.2)">
+        <div class="card-icon">📦</div>
+        <h3>Malicious Package Detection</h3>
+        <p>The CanisterWorm (Phase 5) compromised 47+ npm packages. SBOMator's <strong>triple scanner</strong> (Syft + CDXgen + OSV) identifies every one in your dependency tree.</p>
+      </div>
+      <div class="card" style="border-color:rgba(0,229,255,.2)">
+        <div class="card-icon">📊</div>
+        <h3>SBOM Diff Over Time</h3>
+        <p>Compare SBOMs before and after to catch <strong>suspicious version bumps</strong> — exactly how Shai-Hulud and CanisterWorm propagated through version manipulation.</p>
+      </div>
+    </div>
+  </div>
+  <div class="detail-box slide-footer">
+    <h4>📖 Technical Detail — Phase 5 Detection + Incident Response Value</h4>
+    <p>SBOMator's Supply Chain Threat Detection module (<code>src/threat_intel/supply_chain_detector.py</code>) auto-fetches IOC databases every 6 hours, comparing them against the SBOM's component list. If your project depends on any of the 47+ npm packages compromised by CanisterWorm — or any of the 796+ packages from Shai-Hulud — the HTML report surfaces a <strong>🚨 CRITICAL SUPPLY CHAIN THREAT</strong> banner with affected package names, versions, and immediate remediation steps. Even for the Trivy binary itself — if it appeared as a component in a scanned project, SBOMator would flag the malicious <code>v0.69.4</code> version. This is the ultimate irony: the tool Trivy was supposed to be <em>is what SBOMator actually does</em>.</p>
+  </div>
+</section>
+
+<!-- ================= SLIDE 7 — SUMMARY TABLE ================= -->
+<section class="slide s7">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;width:100%">
+    <span class="tag" style="background:rgba(0,229,255,.15);color:var(--accent)">Summary</span>
+    <h2>Complete Attack Phase Mapping</h2>
+    <p class="subtitle">Every phase blocked — and we detect the damage left behind</p>
+    <table class="cmp-table">
+      <thead>
+        <tr><th>Attack Phase</th><th>What Happened</th><th>Affects SBOMator?</th><th>Why Not</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Phase 1</strong><br>Repo Takeover</td><td>Hijacked service account pushed backdoored binaries</td><td><span class="badge green">❌ IMMUNE</span></td><td>Commercial distribution, no public repo to hijack</td></tr>
+        <tr><td><strong>Phase 2</strong><br>Tag Poisoning</td><td>75 GitHub Action tags repointed to malicious commits</td><td><span class="badge green">❌ IMMUNE</span></td><td>Not a GitHub Action — zero attack surface</td></tr>
+        <tr><td><strong>Phase 3</strong><br>Credential Theft</td><td>Read CI runner memory, stole all cloud secrets</td><td><span class="badge green">❌ IMMUNE</span></td><td>Never runs inside CI/CD runners</td></tr>
+        <tr><td><strong>Phase 4</strong><br>Persistent Backdoor</td><td>Installed systemd service with blockchain C2</td><td><span class="badge green">❌ IMMUNE</span></td><td>On-demand tool, no services installed</td></tr>
+        <tr><td><strong>Phase 5</strong><br>npm Worm</td><td>47+ packages compromised in 60 seconds</td><td><span class="badge green">❌ IMMUNE</span></td><td>Python-based with pinned deps — <strong>and detects it!</strong></td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:24px;text-align:center">
+      <div style="font-size:clamp(16px,2.5vw,26px);font-weight:800;margin-bottom:6px">The Fundamental Difference</div>
+      <p style="font-size:clamp(13px,1.6vw,17px);color:var(--muted);max-width:780px;margin:0 auto;line-height:1.6">Trivy was compromised because it operates as an <span class="c-red">open-source GitHub Action running inside CI/CD pipelines with access to secrets</span>. ESL SBOMator is a <span class="c-green">standalone commercial tool that runs outside the pipeline</span> — architecturally immune to every phase, and capable of detecting the aftermath.</p>
+    </div>
+  </div>
+  <div class="detail-box slide-footer">
+    <h4>🎯 Key Takeaway for Leadership</h4>
+    <p>The Trivy attack is part of a clear escalation: SolarWinds (2020) → Codecov (2021) → ua-parser-js (2021) → tj-actions (2025) → <strong>Trivy (2026)</strong>. Attackers are systematically targeting <strong>security tools themselves</strong>. By choosing ESL SBOMator — a standalone, commercially distributed tool with its own hardened supply chain — your organization eliminates the entire class of CI/CD pipeline weaponization attacks while gaining the ability to <strong>detect</strong> when others fall victim.</p>
+  </div>
+</section>
+
+</div><!-- end deck -->
+
+<!-- NAV ARROWS -->
+<button id="prevBtn" class="nav-arrows" onclick="go(-1)" aria-label="Previous slide">◀</button>
+<button id="nextBtn" class="nav-arrows" onclick="go(1)" aria-label="Next slide">▶</button>
+
+<!-- DOTS -->
+<div class="dots" id="dots"></div>
+
+<!-- COUNTER -->
+<div class="counter" id="counter"></div>
+
+<script>
+const deck=document.getElementById('deck'),slides=document.querySelectorAll('.slide'),
+      dotsC=document.getElementById('dots'),counter=document.getElementById('counter'),
+      prev=document.getElementById('prevBtn'),next=document.getElementById('nextBtn');
+let cur=0,startX=0,dragging=false;
+const N=slides.length;
+
+// build dots
+for(let i=0;i<N;i++){const d=document.createElement('button');d.className='dot';d.onclick=()=>goTo(i);dotsC.appendChild(d)}
+
+function goTo(i){cur=Math.max(0,Math.min(N-1,i));deck.style.transform=`translateX(-${cur*100}vw)`;update()}
+function go(d){goTo(cur+d)}
+function update(){
+  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===cur));
+  counter.textContent=`${cur+1} / ${N}`;
+  prev.disabled=cur===0;next.disabled=cur===N-1;
+}
+update();
+
+// touch / swipe
+deck.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;dragging=true},{passive:true});
+deck.addEventListener('touchmove',e=>{},{passive:true});
+deck.addEventListener('touchend',e=>{if(!dragging)return;dragging=false;const dx=e.changedTouches[0].clientX-startX;if(Math.abs(dx)>50){dx<0?go(1):go(-1)}});
+
+// mouse drag
+deck.addEventListener('mousedown',e=>{startX=e.clientX;dragging=true});
+deck.addEventListener('mouseup',e=>{if(!dragging)return;dragging=false;const dx=e.clientX-startX;if(Math.abs(dx)>60){dx<0?go(1):go(-1)}});
+
+// keyboard
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' ')go(1);else if(e.key==='ArrowLeft')go(-1)});
+</script>
+</body>
+</html>
