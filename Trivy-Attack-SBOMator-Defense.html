@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>ESL SBOMator — Immune to the Trivy Supply Chain Attack</title>
+<link rel="icon" type="image/png" href="https://eswlab.com/wp-content/uploads/2024/11/cropped-esl-icon-180x180.png">
+<link rel="apple-touch-icon" href="https://eswlab.com/wp-content/uploads/2024/11/cropped-esl-icon-180x180.png">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
@@ -16,7 +18,7 @@ html,body{height:100%;font-family:'Inter',system-ui,sans-serif;background:var(--
 
 /* Slide container */
 .deck{display:flex;transition:transform .45s cubic-bezier(.4,0,.2,1);height:100%;will-change:transform}
-.slide{min-width:100vw;height:100vh;display:flex;flex-direction:column;align-items:center;padding:clamp(16px,4vw,48px);overflow-y:auto;scroll-behavior:smooth;position:relative}
+.slide{min-width:100vw;height:100vh;display:flex;flex-direction:column;align-items:center;padding:clamp(16px,4vw,48px);padding-top:clamp(56px,7vw,72px);overflow-y:auto;scroll-behavior:smooth;position:relative}
 .slide::-webkit-scrollbar{width:4px}
 .slide::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:4px}
 
@@ -98,6 +100,33 @@ h2{font-size:clamp(22px,4vw,42px);font-weight:800;line-height:1.15;text-align:ce
 /* Slide counter */
 .counter{position:fixed;top:clamp(10px,2vw,18px);right:clamp(10px,2vw,18px);font-size:12px;color:var(--muted);z-index:100;font-family:'JetBrains Mono',monospace}
 
+/* Top brand bar */
+.top-bar{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:8px clamp(12px,3vw,28px);background:rgba(10,14,26,.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.06)}
+.top-bar .brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.top-bar .brand img{height:32px}
+.top-bar .brand span{font-size:14px;font-weight:700;color:var(--accent);letter-spacing:1px}
+.top-bar .top-links{display:flex;align-items:center;gap:14px}
+.top-bar .top-links a{font-size:clamp(10px,1.3vw,13px);color:var(--muted);text-decoration:none;font-weight:600;padding:5px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.1);transition:all .2s}
+.top-bar .top-links a:hover{color:#fff;border-color:var(--accent);background:rgba(0,229,255,.1)}
+.top-bar .top-links a.cta{background:var(--accent);color:#0a0e1a;border-color:var(--accent);font-weight:700}
+.top-bar .top-links a.cta:hover{background:#00b8d4}
+
+/* Contact footer */
+.contact-bar{background:linear-gradient(135deg,rgba(124,77,255,.15),rgba(0,229,255,.1));border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:clamp(16px,2.5vw,28px);margin-top:20px;width:100%;max-width:950px;display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between}
+.contact-bar .contact-info{display:flex;flex-direction:column;gap:6px}
+.contact-bar .contact-info .co-name{font-size:clamp(15px,1.8vw,20px);font-weight:800;color:var(--accent)}
+.contact-bar .contact-info p{font-size:clamp(11px,1.3vw,14px);color:var(--muted);display:flex;align-items:center;gap:8px}
+.contact-bar .contact-info a{color:var(--accent);text-decoration:none}
+.contact-bar .contact-info a:hover{text-decoration:underline}
+.contact-btns{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.contact-btns a{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;font-size:clamp(12px,1.4vw,14px);font-weight:700;text-decoration:none;transition:all .2s}
+.contact-btns .btn-primary{background:var(--accent);color:#0a0e1a}
+.contact-btns .btn-primary:hover{background:#00b8d4}
+.contact-btns .btn-outline{background:transparent;color:var(--accent);border:2px solid var(--accent)}
+.contact-btns .btn-outline:hover{background:rgba(0,229,255,.12)}
+.contact-btns .btn-social{background:rgba(255,255,255,.08);color:var(--text);border:1px solid rgba(255,255,255,.12);padding:10px 14px}
+.contact-btns .btn-social:hover{background:rgba(255,255,255,.15)}
+
 /* Highlight colors */
 .c-accent{color:var(--accent)}.c-red{color:var(--red)}.c-green{color:var(--green)}.c-orange{color:var(--orange)}.c-pink{color:var(--pink)}.c-yellow{color:var(--yellow)}.c-purple{color:var(--accent2)}
 
@@ -110,10 +139,27 @@ h2{font-size:clamp(22px,4vw,42px);font-weight:800;line-height:1.15;text-align:ce
   .card{flex:1 1 100%;max-width:100%}
   .cmp-table{font-size:11px}
   .phase-item{flex-direction:column;gap:6px}
+  .top-bar .top-links a.hide-mobile{display:none}
+  .contact-bar{flex-direction:column;text-align:center}
+  .contact-bar .contact-info{align-items:center}
+  .contact-btns{justify-content:center}
 }
 </style>
 </head>
 <body>
+
+<!-- TOP BRAND BAR -->
+<div class="top-bar">
+  <a href="https://eswlab.com/products/esl-ailogiclabs/sbomator/" target="_blank" class="brand">
+    <img src="https://eswlab.com/wp-content/uploads/2024/11/172x47.png" alt="ESL Logo">
+    <span>SBOMator</span>
+  </a>
+  <div class="top-links">
+    <a href="https://eswlab.com/products/esl-ailogiclabs/sbomator/" target="_blank" class="hide-mobile">Product</a>
+    <a href="https://eswlab.com/about-us/" target="_blank" class="hide-mobile">About ESL</a>
+    <a href="https://eswlab.com/contact-us/" target="_blank" class="cta">Contact Us</a>
+  </div>
+</div>
 
 <!-- SLIDE DECK -->
 <div class="deck" id="deck">
@@ -332,6 +378,22 @@ SBOMator: Your PC  → <span class="c-green">SBOMator App</span> → scans sourc
   <div class="detail-box slide-footer">
     <h4>🎯 Key Takeaway for Leadership</h4>
     <p>The Trivy attack is part of a clear escalation: SolarWinds (2020) → Codecov (2021) → ua-parser-js (2021) → tj-actions (2025) → <strong>Trivy (2026)</strong>. Attackers are systematically targeting <strong>security tools themselves</strong>. By choosing ESL SBOMator — a standalone, commercially distributed tool with its own hardened supply chain — your organization eliminates the entire class of CI/CD pipeline weaponization attacks while gaining the ability to <strong>detect</strong> when others fall victim.</p>
+  </div>
+  <!-- CONTACT BAR -->
+  <div class="contact-bar">
+    <div class="contact-info">
+      <div class="co-name">Engineering Software Lab (ESL)</div>
+      <p>📍 Ha-Nagar 24 A, Hod Hasharon, Israel</p>
+      <p>📞 <a href="tel:+97298855803">+972 9 8855803</a></p>
+      <p>✉️ <a href="mailto:sales@eswlab.com">sales@eswlab.com</a></p>
+    </div>
+    <div class="contact-btns">
+      <a href="https://eswlab.com/contact-us/" target="_blank" class="btn-primary">📩 Contact Us</a>
+      <a href="https://eswlab.com/products/esl-ailogiclabs/sbomator/" target="_blank" class="btn-outline">🛡️ SBOMator Product Page</a>
+      <a href="https://www.linkedin.com/company/engineering-software-lab-esl-" target="_blank" class="btn-social">in</a>
+      <a href="https://www.youtube.com/@engineeringsoftwarelab7329" target="_blank" class="btn-social">▶</a>
+      <a href="https://www.facebook.com/profile.php?id=100083442314907" target="_blank" class="btn-social">f</a>
+    </div>
   </div>
 </section>
 
