@@ -34,6 +34,9 @@ Last updated: 2026-03-30
 8. why-amp-doesnt-need-node9-proxy.html
    https://zuwasi.github.io/Public-html-pages/why-amp-doesnt-need-node9-proxy.html
 
+9. Avraham_Gilo_Lemma1_Presentation.html
+   https://zuwasi.github.io/Public-html-pages/Avraham_Gilo_Lemma1_Presentation.html
+
 ──────────────────────────────────────────────────────────────
   OTHER FILES
 ──────────────────────────────────────────────────────────────
