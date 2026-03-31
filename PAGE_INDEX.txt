@@ -4,7 +4,7 @@
   Auto-updated on every commit via GitHub Actions
 ═══════════════════════════════════════════════════════════════
 
-Last updated: 2026-03-30
+Last updated: 2026-03-31
 
 ──────────────────────────────────────────────────────────────
   PAGE LINKS
@@ -25,17 +25,17 @@ Last updated: 2026-03-30
 5. Ampcode_CISO_Security_Review.html
    https://zuwasi.github.io/Public-html-pages/Ampcode_CISO_Security_Review.html
 
-6. Trivy-Attack-SBOMator-Defense.html
+6. Avraham_Gilo_Lemma1_Presentation.html
+   https://zuwasi.github.io/Public-html-pages/Avraham_Gilo_Lemma1_Presentation.html
+
+7. Trivy-Attack-SBOMator-Defense.html
    https://zuwasi.github.io/Public-html-pages/Trivy-Attack-SBOMator-Defense.html
 
-7. Unified_Intelligence_Platform_Proposal.html
+8. Unified_Intelligence_Platform_Proposal.html
    https://zuwasi.github.io/Public-html-pages/Unified_Intelligence_Platform_Proposal.html
 
-8. why-amp-doesnt-need-node9-proxy.html
+9. why-amp-doesnt-need-node9-proxy.html
    https://zuwasi.github.io/Public-html-pages/why-amp-doesnt-need-node9-proxy.html
-
-9. Avraham_Gilo_Lemma1_Presentation.html
-   https://zuwasi.github.io/Public-html-pages/Avraham_Gilo_Lemma1_Presentation.html
 
 ──────────────────────────────────────────────────────────────
   OTHER FILES
@@ -46,5 +46,11 @@ Last updated: 2026-03-30
 
 • Ampcode_CISO_Security_Assessment_Report.txt
   https://zuwasi.github.io/Public-html-pages/Ampcode_CISO_Security_Assessment_Report.txt
+
+• amp-paper-to-nb.png
+  https://zuwasi.github.io/Public-html-pages/amp-paper-to-nb.png
+
+• amp-workflow.png
+  https://zuwasi.github.io/Public-html-pages/amp-workflow.png
 
 ══════════════════════════════════════════════════════════════
