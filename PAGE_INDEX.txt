@@ -37,11 +37,11 @@ Last updated: 2026-04-03
 9. Unified_Intelligence_Platform_Proposal.html
    https://zuwasi.github.io/Public-html-pages/Unified_Intelligence_Platform_Proposal.html
 
-10. why-amp-doesnt-need-node9-proxy.html
-   https://zuwasi.github.io/Public-html-pages/why-amp-doesnt-need-node9-proxy.html
+10. nono-ampcode-presentation.html
+   https://zuwasi.github.io/Public-html-pages/nono-ampcode-presentation.html
 
-11. nono-ampcode-presentation.html
-    https://zuwasi.github.io/Public-html-pages/nono-ampcode-presentation.html
+11. why-amp-doesnt-need-node9-proxy.html
+   https://zuwasi.github.io/Public-html-pages/why-amp-doesnt-need-node9-proxy.html
 
 ──────────────────────────────────────────────────────────────
   OTHER FILES
@@ -53,10 +53,16 @@ Last updated: 2026-04-03
 • Ampcode_CISO_Security_Assessment_Report.txt
   https://zuwasi.github.io/Public-html-pages/Ampcode_CISO_Security_Assessment_Report.txt
 
+• amp-logo.png
+  https://zuwasi.github.io/Public-html-pages/amp-logo.png
+
 • amp-paper-to-nb.png
   https://zuwasi.github.io/Public-html-pages/amp-paper-to-nb.png
 
 • amp-workflow.png
   https://zuwasi.github.io/Public-html-pages/amp-workflow.png
+
+• nono-logo.png
+  https://zuwasi.github.io/Public-html-pages/nono-logo.png
 
 ══════════════════════════════════════════════════════════════
