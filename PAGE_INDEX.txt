@@ -65,6 +65,9 @@ Last updated: 2026-04-06
 • Ampcode_CISO_Security_Assessment_Report.txt
   https://zuwasi.github.io/Public-html-pages/Ampcode_CISO_Security_Assessment_Report.txt
 
+• agent-halflife-tester-guide.md
+  https://zuwasi.github.io/Public-html-pages/agent-halflife-tester-guide.md
+
 • amp-logo.png
   https://zuwasi.github.io/Public-html-pages/amp-logo.png
 
