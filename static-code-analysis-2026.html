@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ניתוח קוד סטאטי ובדיקות דינאמיות 2026 – עידן הבינה המלאכותית</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap');
+  :root {
+    --bg-dark: #0a0e1a;
+    --bg-card: #111827;
+    --bg-card-alt: #1a2235;
+    --accent-blue: #3b82f6;
+    --accent-cyan: #06b6d4;
+    --accent-purple: #8b5cf6;
+    --accent-green: #10b981;
+    --accent-orange: #f59e0b;
+    --accent-red: #ef4444;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --border: #1e293b;
+    --glow-blue: 0 0 30px rgba(59,130,246,0.3);
+    --glow-cyan: 0 0 30px rgba(6,182,212,0.3);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: 'Heebo', sans-serif;
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    line-height: 1.7;
+  }
+  code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ===== Background FX ===== */
+  .bg-grid {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: gridMove 20s linear infinite;
+  }
+  @keyframes gridMove { to { background-position: 60px 60px; } }
+  .floating-orbs { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.12; animation: orbFloat 15s ease-in-out infinite; }
+  .orb:nth-child(1) { width: 500px; height: 500px; background: var(--accent-blue); top: -10%; right: -5%; }
+  .orb:nth-child(2) { width: 400px; height: 400px; background: var(--accent-purple); bottom: 10%; left: -5%; animation-delay: -5s; }
+  .orb:nth-child(3) { width: 350px; height: 350px; background: var(--accent-cyan); top: 40%; right: 30%; animation-delay: -10s; }
+  @keyframes orbFloat {
+    0%,100% { transform: translate(0,0) scale(1); }
+    33% { transform: translate(30px,-40px) scale(1.1); }
+    66% { transform: translate(-20px,20px) scale(0.9); }
+  }
+  #particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+  /* ===== Slide Engine ===== */
+  .slides-track {
+    position: fixed; inset: 0; z-index: 1;
+    display: flex;
+    transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+  }
+  .slide {
+    min-width: 100vw; width: 100vw; height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 2rem;
+    overflow-y: auto;
+    position: relative;
+  }
+  .slide-inner {
+    max-width: 1100px; width: 100%;
+    opacity: 0; transform: scale(0.92);
+    transition: opacity 0.6s 0.15s ease, transform 0.6s 0.15s ease;
+  }
+  .slide.active .slide-inner {
+    opacity: 1; transform: scale(1);
+  }
+
+  /* ===== Navigation Arrows ===== */
+  .arrow-btn {
+    position: fixed; z-index: 50;
+    top: 50%; transform: translateY(-50%);
+    width: 56px; height: 56px;
+    border: 2px solid rgba(255,255,255,0.15);
+    background: rgba(10,14,26,0.7);
+    backdrop-filter: blur(12px);
+    border-radius: 50%;
+    color: var(--text-primary);
+    font-size: 1.4rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s;
+    user-select: none;
+  }
+  .arrow-btn:hover {
+    background: rgba(59,130,246,0.25);
+    border-color: var(--accent-cyan);
+    box-shadow: var(--glow-cyan);
+    transform: translateY(-50%) scale(1.1);
+  }
+  .arrow-btn:active { transform: translateY(-50%) scale(0.95); }
+  .arrow-btn.disabled { opacity: 0.2; pointer-events: none; }
+  .arrow-prev { left: 20px; }
+  .arrow-next { right: 20px; }
+
+  /* ===== Progress Bar ===== */
+  .progress-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 4px; z-index: 50; background: rgba(255,255,255,0.05);
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan), var(--accent-purple));
+    transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 0 4px 4px 0;
+    box-shadow: 0 0 12px rgba(59,130,246,0.5);
+  }
+
+  /* ===== Slide Counter ===== */
+  .slide-counter {
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+    z-index: 50; font-size: 0.8rem; color: var(--text-muted);
+    background: rgba(10,14,26,0.7); backdrop-filter: blur(10px);
+    padding: 0.4rem 1.2rem; border-radius: 50px;
+    border: 1px solid var(--border);
+  }
+  .slide-counter .current { color: var(--accent-cyan); font-weight: 700; }
+
+  /* ===== Dot Navigation ===== */
+  .dots-nav {
+    position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%);
+    z-index: 50; display: flex; gap: 8px;
+  }
+  .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.1);
+    cursor: pointer; transition: all 0.3s;
+  }
+  .dot.active { background: var(--accent-cyan); box-shadow: 0 0 10px rgba(6,182,212,0.5); transform: scale(1.3); }
+  .dot:hover:not(.active) { background: rgba(255,255,255,0.3); }
+
+  /* ===== Keyboard Hint ===== */
+  .kb-hint {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    z-index: 50; font-size: 0.7rem; color: var(--text-muted);
+    background: rgba(10,14,26,0.7); backdrop-filter: blur(10px);
+    padding: 0.3rem 1rem; border-radius: 50px;
+    border: 1px solid var(--border);
+    opacity: 1; transition: opacity 1s;
+  }
+  .kb-hint.hidden { opacity: 0; pointer-events: none; }
+  kbd { background: rgba(255,255,255,0.1); padding: 0.1rem 0.4rem; border-radius: 4px; font-family: inherit; }
+
+  /* ===== Content Reusables ===== */
+  .section-tag {
+    display: inline-block; font-size: 0.75rem; font-weight: 600;
+    color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 2px;
+    margin-bottom: 0.8rem;
+  }
+  h1 {
+    font-size: clamp(1.8rem, 4.5vw, 3.2rem); font-weight: 900;
+    line-height: 1.2; margin-bottom: 1.2rem;
+    background: linear-gradient(135deg, #fff, var(--accent-cyan), var(--accent-purple));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-size: 200% 200%;
+    animation: shimmer 4s ease-in-out infinite;
+  }
+  @keyframes shimmer { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+  h2 { font-size: clamp(1.4rem, 3vw, 2.2rem); font-weight: 800; margin-bottom: 1rem; }
+  h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.6rem; }
+  .sub { font-size: 1.05rem; color: var(--text-secondary); margin-bottom: 1.5rem; }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3);
+    border-radius: 50px; padding: 0.4rem 1rem; font-size: 0.8rem;
+    color: var(--accent-cyan); margin-bottom: 1.5rem;
+    animation: pulse-border 3s ease-in-out infinite;
+  }
+  @keyframes pulse-border { 0%,100% { border-color: rgba(59,130,246,0.3); } 50% { border-color: rgba(6,182,212,0.6); } }
+
+  .hero-stats { display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; margin-top: 2rem; }
+  .stat-card {
+    background: rgba(17,24,39,0.6); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1rem 1.5rem; min-width: 140px; text-align: center;
+    transition: transform 0.3s, border-color 0.3s;
+  }
+  .stat-card:hover { transform: translateY(-4px); border-color: var(--accent-cyan); }
+  .stat-number {
+    font-size: 1.8rem; font-weight: 900;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .stat-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; }
+  .hero-author { font-size: 0.9rem; color: var(--text-muted); margin-top: 1.5rem; }
+  .hero-author strong { color: var(--accent-blue); }
+  .hero-author a { color: var(--accent-cyan); text-decoration: none; }
+
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.2rem; }
+  .card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 1.4rem; position: relative; overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+  }
+  .card:hover { transform: translateY(-6px); box-shadow: var(--glow-blue); border-color: var(--accent-blue); }
+  .card-icon {
+    width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; margin-bottom: 0.8rem;
+  }
+  .card h3 { font-size: 1.05rem; margin-bottom: 0.5rem; }
+  .card p { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; }
+  .icon-blue { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
+  .icon-cyan { background: rgba(6,182,212,0.15); color: var(--accent-cyan); }
+  .icon-purple { background: rgba(139,92,246,0.15); color: var(--accent-purple); }
+  .icon-green { background: rgba(16,185,129,0.15); color: var(--accent-green); }
+  .icon-orange { background: rgba(245,158,11,0.15); color: var(--accent-orange); }
+  .icon-red { background: rgba(239,68,68,0.15); color: var(--accent-red); }
+
+  .tag-pill {
+    display: inline-block; font-size: 0.7rem; font-weight: 600;
+    padding: 0.2rem 0.6rem; border-radius: 50px; margin: 0.15rem;
+  }
+  .tag-blue { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
+  .tag-green { background: rgba(16,185,129,0.15); color: var(--accent-green); }
+  .tag-purple { background: rgba(139,92,246,0.15); color: var(--accent-purple); }
+  .tag-orange { background: rgba(245,158,11,0.15); color: var(--accent-orange); }
+  .tag-cyan { background: rgba(6,182,212,0.15); color: var(--accent-cyan); }
+  .tag-red { background: rgba(239,68,68,0.15); color: var(--accent-red); }
+  .badge-row { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem; }
+
+  .callout {
+    background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2);
+    border-radius: 14px; padding: 1.2rem 1.5rem; margin: 1rem 0;
+    display: flex; gap: 0.8rem; align-items: flex-start;
+  }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; }
+  .callout p { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; }
+  .callout.warning { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.2); }
+  .callout.danger { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.2); }
+  .callout.success { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.2); }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
+
+  .code-block {
+    background: #0d1117; border: 1px solid #21262d; border-radius: 10px;
+    padding: 1.2rem; overflow-x: auto; margin: 1rem 0; direction: ltr; text-align: left; position: relative;
+  }
+  .code-block::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple), var(--accent-cyan));
+    border-radius: 10px 10px 0 0;
+  }
+  .code-block code { font-size: 0.78rem; line-height: 1.65; color: #c9d1d9; }
+  .code-block-label {
+    position: absolute; top: 10px; left: 14px;
+    font-size: 0.65rem; color: var(--text-muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  .code-line-number { color: #484f58; user-select: none; padding-left: 0.8rem; display: inline-block; width: 2rem; text-align: left; }
+  .code-keyword { color: #ff7b72; }
+  .code-type { color: #79c0ff; }
+  .code-string { color: #a5d6ff; }
+  .code-comment { color: #8b949e; font-style: italic; }
+  .code-func { color: #d2a8ff; }
+  .code-error-line { background: rgba(239,68,68,0.1); display: block; margin: 0 -1.2rem; padding: 0 1.2rem; border-right: 3px solid var(--accent-red); }
+  .code-safe-line { background: rgba(16,185,129,0.08); display: block; margin: 0 -1.2rem; padding: 0 1.2rem; border-right: 3px solid var(--accent-green); }
+
+  .comparison-table {
+    width: 100%; border-collapse: separate; border-spacing: 0;
+    border-radius: 12px; overflow: hidden; border: 1px solid var(--border); font-size: 0.82rem;
+  }
+  .comparison-table th { background: rgba(59,130,246,0.1); padding: 0.7rem 0.8rem; font-weight: 700; text-align: right; border-bottom: 2px solid var(--accent-blue); }
+  .comparison-table td { padding: 0.6rem 0.8rem; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+  .comparison-table tr:hover td { background: rgba(59,130,246,0.05); }
+  .check { color: var(--accent-green); font-weight: bold; font-size: 1.1rem; }
+  .cross { color: var(--accent-red); font-weight: bold; font-size: 1.1rem; }
+  .partial { color: var(--accent-orange); font-weight: bold; font-size: 1.1rem; }
+
+  /* Timeline (horizontal for slide) */
+  .h-timeline { display: flex; gap: 1rem; overflow-x: auto; padding: 1rem 0; }
+  .tl-card {
+    min-width: 200px; flex: 1;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1.2rem; transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .tl-card:hover { transform: translateY(-4px); box-shadow: var(--glow-blue); }
+  .tl-card .year {
+    display: inline-block; font-weight: 800; font-size: 0.95rem;
+    color: var(--accent-cyan); margin-bottom: 0.4rem;
+    padding: 0.15rem 0.6rem; border-radius: 6px;
+    background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.2);
+  }
+  .tl-card h3 { font-size: 0.95rem; margin-bottom: 0.3rem; }
+  .tl-card p { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5; }
+
+  /* Flow */
+  .flow-container { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.8rem; direction: ltr; }
+  .flow-step {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1rem; text-align: center;
+    min-width: 130px; max-width: 160px; flex: 1; transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .flow-step:hover { transform: translateY(-4px); box-shadow: var(--glow-cyan); }
+  .flow-step .step-icon { font-size: 1.6rem; margin-bottom: 0.3rem; }
+  .flow-step h4 { font-size: 0.8rem; margin-bottom: 0.2rem; }
+  .flow-step p { font-size: 0.68rem; color: var(--text-muted); }
+  .flow-arrow { font-size: 1.3rem; color: var(--accent-cyan); animation: arrowPulse 2s ease-in-out infinite; }
+  @keyframes arrowPulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+  /* Products */
+  .product-showcase { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.2rem; }
+  .product-card {
+    background: linear-gradient(135deg, var(--bg-card), var(--bg-card-alt));
+    border: 1px solid var(--border); border-radius: 16px;
+    padding: 1.4rem; text-align: center; transition: transform 0.3s, box-shadow 0.3s; position: relative; overflow: hidden;
+  }
+  .product-card:hover { transform: translateY(-6px); }
+  .product-card.featured { border-color: var(--accent-cyan); box-shadow: var(--glow-cyan); }
+  .product-card .product-badge {
+    position: absolute; top: 12px; left: 12px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+    color: #fff; font-size: 0.65rem; font-weight: 700;
+    padding: 0.2rem 0.6rem; border-radius: 50px;
+  }
+  .product-card h3 { font-size: 1.1rem; margin: 0.5rem 0 0.5rem; }
+  .product-card > p { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.8rem; }
+  .product-features { list-style: none; text-align: right; }
+  .product-features li { font-size: 0.78rem; color: var(--text-secondary); padding: 0.3rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .product-features li::before { content: '✦ '; color: var(--accent-cyan); }
+  .product-link {
+    display: inline-block; margin-top: 0.8rem;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+    color: #fff; text-decoration: none; padding: 0.45rem 1.2rem;
+    border-radius: 50px; font-size: 0.8rem; font-weight: 600;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .product-link:hover { transform: scale(1.05); box-shadow: var(--glow-blue); }
+
+  .highlight-box {
+    background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(139,92,246,0.08));
+    border: 1px solid rgba(139,92,246,0.2);
+    border-radius: 14px; padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .highlight-box h3 { color: var(--accent-purple); margin-bottom: 0.6rem; font-size: 1.05rem; }
+  .highlight-box p { font-size: 0.88rem; color: var(--text-secondary); }
+
+  .counter-section { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 2rem; }
+  .counter-item { padding: 1.2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; text-align: center; }
+  .counter-value {
+    font-size: 2rem; font-weight: 900;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .counter-label { color: var(--text-muted); font-size: 0.78rem; margin-top: 0.3rem; }
+
+  .slide-center { text-align: center; }
+
+  /* Original article quote */
+  .original-quote {
+    background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.2);
+    border-radius: 12px; padding: 1rem 1.3rem; margin: 1rem 0;
+    position: relative; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6;
+  }
+  .original-quote::before {
+    content: '📰 מהמאמר המקורי (2011)';
+    display: block; font-size: 0.68rem; font-weight: 700; color: var(--accent-purple);
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem;
+  }
+  .original-quote em { color: var(--text-primary); font-style: normal; font-weight: 600; }
+  .oq-link { display: inline-block; margin-top: 0.5rem; font-size: 0.72rem; color: var(--accent-cyan); text-decoration: none; }
+  .oq-link:hover { text-decoration: underline; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .two-col { grid-template-columns: 1fr; }
+    .cards-grid { grid-template-columns: 1fr; }
+    .product-showcase { grid-template-columns: 1fr; }
+    .h-timeline { flex-direction: column; }
+    .flow-container { flex-direction: column; }
+    .flow-arrow { transform: rotate(90deg); }
+    .counter-section { grid-template-columns: 1fr 1fr; }
+    .arrow-btn { width: 44px; height: 44px; font-size: 1.1rem; }
+    .arrow-prev { left: 8px; }
+    .arrow-next { right: 8px; }
+    .slide { padding: 1rem; }
+    .comparison-table { font-size: 0.72rem; }
+    .comparison-table th, .comparison-table td { padding: 0.4rem; }
+    .dots-nav { gap: 5px; }
+    .dot { width: 8px; height: 8px; }
+  }
+
+  /* ===== Touch / swipe visual cue ===== */
+  .swipe-hint {
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+    z-index: 50; font-size: 0.7rem; color: var(--text-muted);
+    display: none;
+  }
+  @media (pointer: coarse) { .swipe-hint { display: block; } }
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="floating-orbs"><div class="orb"></div><div class="orb"></div><div class="orb"></div></div>
+<canvas id="particles"></canvas>
+
+<!-- Arrow Buttons -->
+<button class="arrow-btn arrow-prev disabled" id="prevBtn" aria-label="Previous">◀</button>
+<button class="arrow-btn arrow-next" id="nextBtn" aria-label="Next">▶</button>
+
+<!-- Progress Bar -->
+<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+<!-- Slide Counter -->
+<div class="slide-counter"><span class="current" id="currentSlide">1</span> / <span id="totalSlides">10</span></div>
+
+<!-- Dots -->
+<div class="dots-nav" id="dotsNav"></div>
+
+<!-- Keyboard Hint -->
+<div class="kb-hint" id="kbHint">השתמש ב-<kbd>→</kbd> <kbd>←</kbd> או החלק ✋ לניווט</div>
+
+<!-- ==================== SLIDES ==================== -->
+<div class="slides-track" id="slidesTrack">
+
+<!-- SLIDE 1: Hero -->
+<div class="slide active" data-slide="0">
+  <div class="slide-inner slide-center">
+    <div class="hero-badge"><span>🔬</span><span>מהדורה מעודכנת 2026 · מבוסס על מאמר New-Tech 2011</span></div>
+    <h1>ניתוח קוד סטאטי ובדיקות דינאמיות<br>בעידן הבינה המלאכותית</h1>
+    <p class="sub">מ-2011 ועד 2026: סקירה מקצועית מקיפה של שיטות ניתוח קוד, בדיקות דינאמיות, תקני כתיבה — וכיצד סוכני AI משנים את כללי המשחק</p>
+    <div class="hero-author"><strong>דניאל לייזרוביץ</strong> · <a href="https://eswlab.com" target="_blank">Engineering Software Lab (ESL)</a></div>
+    <div class="hero-stats">
+      <div class="stat-card"><div class="stat-number">$1.32B</div><div class="stat-label">שוק הניתוח הסטאטי 2030</div></div>
+      <div class="stat-card"><div class="stat-number">85%</div><div class="stat-label">פגיעויות ניתנות לגילוי ע"י SAST+AI</div></div>
+      <div class="stat-card"><div class="stat-number">10x</div><div class="stat-label">ירידה בעלות תיקון מוקדם</div></div>
+      <div class="stat-card"><div class="stat-number">179</div><div class="stat-label">כללים ב-MISRA C++ 2023</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2: Introduction -->
+<div class="slide" data-slide="1">
+  <div class="slide-inner">
+    <div class="section-tag">מבוא</div>
+    <h2>המורכבות של מערכות תוכנה מודרניות</h2>
+    <p class="sub">הקוד גדל, הסיכונים עולים — והצורך בכלים אוטומטיים חד-משמעי יותר מאי פעם</p>
+    <div class="two-col">
+      <div>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+          ב-2011 כתבתי מאמר ב-<a href="https://www.new-techonline.com/2011/05/%D7%A0%D7%99%D7%AA%D7%95%D7%97-%D7%A7%D7%95%D7%93-%D7%A1%D7%98%D7%90%D7%98%D7%99-%D7%95%D7%91%D7%93%D7%99%D7%A7%D7%95%D7%AA-%D7%A7%D7%95%D7%93-%D7%93%D7%99%D7%A0%D7%90%D7%9E%D7%99%D7%95%D7%AA-%D7%9B/" target="_blank" style="color: var(--accent-cyan);">New-Tech Magazine</a> על ניתוח קוד סטאטי ובדיקות דינאמיות. מאז, העולם השתנה מקצה לקצה.
+        </p>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+          מערכות תוכנה מודרניות כוללות <strong style="color: var(--text-primary);">מיליוני שורות קוד</strong>, שימוש מסיבי בקוד פתוח, שרשראות אספקת תוכנה מורכבות — ועשרות מפתחים ברמות שונות. לכך מתווסף קוד שנוצר ע"י <strong style="color: var(--accent-purple);">סוכני AI</strong>.
+        </p>
+        <p style="color: var(--text-secondary);">הפתגם "כשיש לך רק פטיש, כל בעיה נראית כמו מסמר" עדיין רלוונטי — אך היום הארגז כלים רחב בהרבה.</p>
+        <div class="original-quote">
+          "מערכות תוכנה מודרניות הינן לרוב בעלות מספר מאפיינים עיקריים: <em>כמות עצומה של שורות קוד</em>, שהייתה נחשבת לדמיונית רק לפני מספר שנים בודדות; שימוש רב בקוד שמקורו מחוץ לארגון [...] ומספר רב של מפתחים ברמות שונות של ניסיון והכשרה."
+          <br><a class="oq-link" href="https://www.new-techonline.com/2011/05/%D7%A0%D7%99%D7%AA%D7%95%D7%97-%D7%A7%D7%95%D7%93-%D7%A1%D7%98%D7%90%D7%98%D7%99-%D7%95%D7%91%D7%93%D7%99%D7%A7%D7%95%D7%AA-%D7%A7%D7%95%D7%93-%D7%93%D7%99%D7%A0%D7%90%D7%9E%D7%99%D7%95%D7%AA-%D7%9B/" target="_blank">→ קראו את המאמר המקורי ב-New-Tech Magazine</a>
+        </div>
+      </div>
+      <div>
+        <div class="callout">
+          <div class="callout-icon">💡</div>
+          <div>
+            <p><strong style="color: var(--text-primary);">עלות תיקון שגיאות לפי שלב:</strong></p>
+            <p>• פיתוח: <span style="color: var(--accent-green);">$1</span> · QA: <span style="color: var(--accent-orange);">$10</span> · אינטגרציה: <span style="color: var(--accent-orange);">$100</span> · פרודקשן: <span style="color: var(--accent-red);">$1,000+</span></p>
+          </div>
+        </div>
+        <div class="callout warning">
+          <div class="callout-icon">⚠️</div>
+          <div>
+            <p><strong style="color: var(--text-primary);">2026: סוכני AI כותבים קוד</strong><br>
+            כמעט מחצית מהקוד שנוצר ע"י LLMs מכיל פגיעויות אבטחה. ניתוח סטאטי הפך ל-<strong>חובה</strong>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: Evolution Timeline -->
+<div class="slide" data-slide="2">
+  <div class="slide-inner">
+    <div class="section-tag">אבולוציה</div>
+    <h2>ציר הזמן: מ-Lint ועד סוכני AI</h2>
+    <p class="sub">15 שנים של חדשנות בעולם ניתוח הקוד</p>
+    <div class="h-timeline">
+      <div class="tl-card">
+        <div class="year">2011</div>
+        <h3>ניתוח סטאטי קלאסי + INFER</h3>
+        <p>כלי Program Flow Analysis. מאמר New-Tech מציג את INFER — שיטת Separation Logic להוכחת העדר שגיאות.</p>
+        <div class="badge-row"><a href="https://eswlab.com/products/parasoft/" target="_blank" class="tag-pill tag-blue" style="text-decoration:none;">Parasoft</a><a href="https://fbinfer.com/" target="_blank" class="tag-pill tag-purple" style="text-decoration:none;">INFER</a><span class="tag-pill tag-orange">MISRA C:2004</span></div>
+      </div>
+      <div class="tl-card">
+        <div class="year">2012–2015</div>
+        <h3>MISRA C:2012 + CI/CD</h3>
+        <p>תקן MISRA C:2012 מחליף 2004. Facebook רוכשת Monoidics ומשחררת <a href="https://fbinfer.com/" target="_blank" style="color: var(--accent-cyan);">INFER</a> כ-OSS.</p>
+        <div class="badge-row"><span class="tag-pill tag-green">MISRA C:2012</span><a href="https://fbinfer.com/" target="_blank" class="tag-pill tag-cyan" style="text-decoration:none;">INFER OSS</a></div>
+      </div>
+      <div class="tl-card">
+        <div class="year">2017–2020</div>
+        <h3>AUTOSAR C++14 + DevSecOps</h3>
+        <p>AUTOSAR Adaptive Platform. שילוב SAST/DAST ב-DevSecOps pipelines.</p>
+        <div class="badge-row"><span class="tag-pill tag-purple">AUTOSAR</span><span class="tag-pill tag-red">ISO 26262</span></div>
+      </div>
+      <div class="tl-card">
+        <div class="year">2023</div>
+        <h3>MISRA C/C++:2023</h3>
+        <p>MISRA C:2023 (C11/C18). MISRA C++:2023 (C++17) — 179 כללים. תוצר משותף MISRA + AUTOSAR.</p>
+        <div class="badge-row"><span class="tag-pill tag-green">MISRA C:2023</span><span class="tag-pill tag-blue">179 Rules</span></div>
+      </div>
+      <div class="tl-card">
+        <div class="year">2024–2026</div>
+        <h3>מהפכת AI</h3>
+        <p>סוכני AI כמו <a href="https://ampcode.com" target="_blank" style="color: var(--accent-cyan);">Amp</a>. <a href="https://eswlab.com/products/esl-ailogiclabs/fixcreator/" target="_blank" style="color: var(--accent-cyan);">ESL FixCreator</a> — תיקון Air-Gapped. שוק SAST מגיע ל-$1.17B.</p>
+        <div class="badge-row"><a href="https://ampcode.com" target="_blank" class="tag-pill tag-cyan" style="text-decoration:none;">Amp</a><a href="https://eswlab.com/products/esl-ailogiclabs/fixcreator/" target="_blank" class="tag-pill tag-blue" style="text-decoration:none;">FixCreator</a><span class="tag-pill tag-red">$1.17B</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4: Methods -->
+<div class="slide" data-slide="3">
+  <div class="slide-inner">
+    <div class="section-tag">שיטות בדיקה</div>
+    <h2>ארבע שיטות — ואף אחת לא מספיקה לבדה</h2>
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-icon icon-blue">🔍</div>
+        <h3>ניתוח קוד סטאטי (SAST)</h3>
+        <p>סריקה <strong>ללא הרצה</strong>. מזהה Null Pointer, Buffer Overflow, Dead Code. מגבלה: משתנים גלובליים, Halting Problem.</p>
+        <div class="badge-row"><a href="https://eswlab.com/products/parasoft/" target="_blank" class="tag-pill tag-blue" style="text-decoration:none;">Parasoft</a><a href="https://scan.coverity.com/" target="_blank" class="tag-pill tag-blue" style="text-decoration:none;">Coverity</a></div>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-green">▶️</div>
+        <h3>בדיקות דינאמיות (DAST)</h3>
+        <p><strong>הרצת הקוד בפועל</strong>. מגלה בעיות עם גלובליים ו-Race Conditions. חסרון: רק נתיבים שרצו בפועל.</p>
+        <div class="badge-row"><a href="https://www.parasoft.com/products/parasoft-insure/" target="_blank" class="tag-pill tag-green" style="text-decoration:none;">Insure++</a><a href="https://valgrind.org/" target="_blank" class="tag-pill tag-green" style="text-decoration:none;">Valgrind</a></div>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-purple">📊</div>
+        <h3>בדיקות כיסוי (Coverage)</h3>
+        <p>"סמנים" בקוד לעקוב אחר מסלול ריצה. חושפת קוד <strong>שלא נבדק</strong>. MC/DC, DO-178C.</p>
+        <div class="badge-row"><span class="tag-pill tag-purple">MC/DC</span><span class="tag-pill tag-purple">DO-178C</span></div>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-orange">📏</div>
+        <h3>אכיפת תקני כתיבה</h3>
+        <p>בדיקה סמנטית מול MISRA C:2023, CERT-C, CWE. מונעת דפוסי כתיבה מסוכנים לפני שהם הופכים לבאגים.</p>
+        <div class="badge-row"><span class="tag-pill tag-orange">MISRA</span><span class="tag-pill tag-orange">CERT-C</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5: Comparison Table -->
+<div class="slide" data-slide="4">
+  <div class="slide-inner">
+    <div class="section-tag">השוואה</div>
+    <h2>מה כל שיטה מגלה?</h2>
+    <p class="sub" style="margin-bottom: 1rem;">שילוב כלים הוא המפתח — כולל AI Agent כשכבה חמישית</p>
+    <div style="overflow-x: auto;">
+    <table class="comparison-table">
+      <thead>
+        <tr><th>סוג שגיאה</th><th>SAST</th><th>DAST</th><th>Coverage</th><th>Standards</th><th>AI Agent</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Null Pointer (מקומי)</td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="cross">✗</span></td><td><span class="partial">◐</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>Null Pointer (גלובלי)</td><td><span class="cross">✗</span></td><td><span class="check">✓</span></td><td><span class="partial">◐</span></td><td><span class="cross">✗</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>לולאה אינסופית (unsigned)</td><td><span class="check">✓</span></td><td><span class="partial">◐</span></td><td><span class="cross">✗</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>Double Free / Memory Leaks</td><td><span class="partial">◐</span></td><td><span class="check">✓</span></td><td><span class="cross">✗</span></td><td><span class="cross">✗</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>Signed/Unsigned Conversion</td><td><span class="check">✓</span></td><td><span class="cross">✗</span></td><td><span class="cross">✗</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>קוד שלא רץ בפועל</td><td><span class="partial">◐</span></td><td><span class="cross">✗</span></td><td><span class="check">✓</span></td><td><span class="cross">✗</span></td><td><span class="partial">◐</span></td></tr>
+        <tr><td>Race Conditions</td><td><span class="partial">◐</span></td><td><span class="check">✓</span></td><td><span class="cross">✗</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>הפרות MISRA</td><td><span class="cross">✗</span></td><td><span class="cross">✗</span></td><td><span class="cross">✗</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 0.8rem;"><span class="check">✓</span> מזהה &nbsp; <span class="partial">◐</span> חלקית &nbsp; <span class="cross">✗</span> לא מזהה</p>
+    <div class="original-quote">
+      "כפי שאנו למדים פעם אחר פעם, המציאות מורכבת יותר, <em>וסוג בדיקות אחד לא מסוגל לתת מענה עקבי אפילו לשגיאות תכנות פשוטות</em>. [...] הפעלנו 4 סוגי בדיקות שונות: ניתוח קוד סטאטי, בדיקות דינאמיות, בדיקות כיסוי ובדיקות תקני כתיבה ואיתרנו שגיאות תכנות שונות בתנאים שונים."
+      <br><a class="oq-link" href="https://www.new-techonline.com/2011/05/%D7%A0%D7%99%D7%AA%D7%95%D7%97-%D7%A7%D7%95%D7%93-%D7%A1%D7%98%D7%90%D7%98%D7%99-%D7%95%D7%91%D7%93%D7%99%D7%A7%D7%95%D7%AA-%D7%A7%D7%95%D7%93-%D7%93%D7%99%D7%A0%D7%90%D7%9E%D7%99%D7%95%D7%AA-%D7%9B/" target="_blank">→ מאמר מקורי, New-Tech 2011</a>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6: AI Revolution -->
+<div class="slide" data-slide="5">
+  <div class="slide-inner">
+    <div class="section-tag">מהפכת AI</div>
+    <h2>2026: סוכני AI משנים את כללי המשחק</h2>
+    <div class="highlight-box">
+      <h3>🤖 מ-"מצא שגיאה" ל-"תקן שגיאה" — המעבר הגדול</h3>
+      <p>ב-2011, כלים ידעו <strong>למצוא</strong> שגיאות. ב-2026, סוכני AI כמו <strong style="color: var(--accent-cyan);">Amp</strong> ו-<strong style="color: var(--accent-blue);">ESL FixCreator</strong> יודעים גם <strong>לתקן</strong> — באופן אוטומטי, מדויק, ומבוקר.</p>
+    </div>
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-icon icon-cyan">🧠</div>
+        <h3>סוכני AI לקוד</h3>
+        <p><a href="https://ampcode.com" target="_blank" style="color: var(--accent-cyan);">Amp</a> מבין Codebases מורכבים, מבצע Refactoring, כותב Unit Tests, ומזהה שגיאות בהקשר חוצה-קבצים.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-blue">🔧</div>
+        <h3>תיקון אוטומטי Air-Gapped</h3>
+        <p><a href="https://eswlab.com/products/esl-ailogiclabs/fixcreator/" target="_blank" style="color: var(--accent-cyan);">ESL FixCreator</a> — LLM מקומי ברשת מבודדת. תיקון שורה אחת לכל הפרה. אפס חשיפה.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-green">🛡️</div>
+        <h3>Guardrails לקוד AI</h3>
+        <p><a href="https://checkmarx.com/" target="_blank" style="color: var(--accent-cyan);">Checkmarx</a>, <a href="https://www.jetbrains.com/qodana/" target="_blank" style="color: var(--accent-cyan);">Qodana</a>, <a href="https://eswlab.com/products/parasoft/" target="_blank" style="color: var(--accent-cyan);">Parasoft</a> — שכבות AI שמפחיתות False Positives ומאמתות קוד שנוצר ע"י AI.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-purple">🔒</div>
+        <h3>Shift-Left Security</h3>
+        <p>SAST + AI ישירות ב-IDE, עוד לפני ה-Commit. Quality Gates אוטומטיים ב-CI/CD.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7: FixCreator Flow -->
+<div class="slide" data-slide="6">
+  <div class="slide-inner slide-center">
+    <div class="section-tag">ESL FixCreator</div>
+    <h2>תהליך עבודה מאובטח — Air-Gapped</h2>
+    <p class="sub">הכל רץ ברשת מבודדת — אפס חשיפה לאינטרנט</p>
+    <div class="flow-container">
+      <div class="flow-step"><div class="step-icon">📋</div><h4>סריקת Parasoft</h4><p>ניתוח סטאטי C/C++</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-icon">🔎</div><h4>בחירת הפרות</h4><p>סקירה ובחירה</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-icon">🤖</div><h4>LLM מקומי</h4><p>תיקונים ע"י <a href="https://lmstudio.ai/" target="_blank" style="color: var(--accent-cyan); font-size: 0.68rem;">LM Studio</a></p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-icon">✅</div><h4>אימות חוזר</h4><p>Parasoft סורק שוב</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-icon">📊</div><h4>Audit Trail</h4><p>תיעוד מלא לתקינה</p></div>
+    </div>
+    <div class="badge-row" style="justify-content: center; margin-top: 1rem;">
+      <span class="tag-pill tag-red">Air-Gapped</span>
+      <span class="tag-pill tag-green">DO-178C Ready</span>
+      <span class="tag-pill tag-blue">MISRA C:2012</span>
+      <span class="tag-pill tag-orange">CERT-C</span>
+      <span class="tag-pill tag-purple">CWE Top 25</span>
+      <span class="tag-pill tag-cyan">ISO 26262</span>
+    </div>
+    <div style="margin-top: 1.5rem;">
+      <a href="https://eswlab.com/products/esl-ailogiclabs/fixcreator/" target="_blank" class="product-link">למידע נוסף על FixCreator ←</a>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8: Code Demo -->
+<div class="slide" data-slide="7">
+  <div class="slide-inner">
+    <div class="section-tag">הדגמה</div>
+    <h2>אותה הבעיה — 2011 vs. 2026</h2>
+    <div class="two-col">
+      <div>
+        <h3 style="color: var(--accent-red);">❌ קוד בעייתי — Null Pointer</h3>
+        <div class="code-block">
+          <div class="code-block-label">vulnerable.c</div>
+          <code>
+<span class="code-line-number">1</span> <span class="code-keyword">#define</span> global
+<span class="code-line-number">2</span> <span class="code-keyword">#if</span> <span class="code-func">defined</span>(global)
+<span class="code-line-number">3</span> <span class="code-type">int</span> *foo_ptr = <span class="code-string">0x0</span>;
+<span class="code-line-number">4</span> <span class="code-keyword">#endif</span>
+<span class="code-line-number">5</span>
+<span class="code-line-number">6</span> <span class="code-type">void</span> <span class="code-func">main</span>(<span class="code-type">void</span>) {
+<span class="code-error-line"><span class="code-line-number">7</span>   (*foo_ptr)++; <span class="code-comment">// ⚠ CRASH!</span></span>
+<span class="code-line-number">8</span> }
+          </code>
+        </div>
+        <div class="callout danger">
+          <div class="callout-icon">💥</div>
+          <div><p><strong style="color: var(--text-primary);">2011 — SAST קלאסי:</strong> משתנה גלובלי → <strong>אין התראה!</strong> בגלל Halting Problem.</p></div>
+        </div>
+        <div class="original-quote" style="margin-top: 0.5rem;">
+          "במידה והמשתנה *foo_ptr מוגדר כמשתנה גלובלי, <em>לא תוצג התראה בכלי ניתוח קוד סטאטי קלאסיים</em> [...] שכן שיטת הפעולה של כלים אלו נמנעת מבדיקת המשתנה הגלובלי, בנסיון למזער את כמות התראות השווא."
+          <br><a class="oq-link" href="https://www.new-techonline.com/2011/05/%D7%A0%D7%99%D7%AA%D7%95%D7%97-%D7%A7%D7%95%D7%93-%D7%A1%D7%98%D7%90%D7%98%D7%99-%D7%95%D7%91%D7%93%D7%99%D7%A7%D7%95%D7%AA-%D7%A7%D7%95%D7%93-%D7%93%D7%99%D7%A0%D7%90%D7%9E%D7%99%D7%95%D7%AA-%D7%9B/" target="_blank">→ מאמר מקורי, New-Tech 2011</a>
+        </div>
+      </div>
+      <div>
+        <h3 style="color: var(--accent-green);">✅ תיקון AI — 2026</h3>
+        <div class="code-block">
+          <div class="code-block-label">AI-suggested fix</div>
+          <code>
+<span class="code-line-number">1</span> <span class="code-type">int</span> *foo_ptr = <span class="code-string">0x0</span>;
+<span class="code-line-number">2</span>
+<span class="code-line-number">3</span> <span class="code-type">void</span> <span class="code-func">main</span>(<span class="code-type">void</span>) {
+<span class="code-safe-line"><span class="code-line-number">4</span>   <span class="code-keyword">if</span> (foo_ptr != <span class="code-string">NULL</span>) {</span>
+<span class="code-safe-line"><span class="code-line-number">5</span>     (*foo_ptr)++;</span>
+<span class="code-safe-line"><span class="code-line-number">6</span>   }</span>
+<span class="code-line-number">7</span> }
+          </code>
+        </div>
+        <div class="callout success">
+          <div class="callout-icon">🤖</div>
+          <div><p><strong style="color: var(--text-primary);">2026 — AI Agent:</strong> מזהה גם גלובלי, מייצר תיקון, <a href="https://eswlab.com/products/parasoft/" target="_blank" style="color: var(--accent-cyan);">Parasoft</a> מאמת, Audit Trail מלא.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 9: Products -->
+<div class="slide" data-slide="8">
+  <div class="slide-inner">
+    <div class="section-tag">כלים ומוצרים</div>
+    <h2>ארגז הכלים של 2026</h2>
+    <div class="product-showcase">
+      <div class="product-card featured">
+        <div class="product-badge">🔥 חדש</div>
+        <div style="font-size: 2.2rem;">🤖</div>
+        <h3>ESL FixCreator</h3>
+        <p>תיקון הפרות ע"י LLM מקומי — DO-178C Ready</p>
+        <ul class="product-features">
+          <li>Air-Gapped — אפס אינטרנט</li>
+          <li>תיקון שורה אחת לכל הפרה</li>
+          <li>CERT, MISRA, CWE</li>
+          <li>DO-178C / DO-330 Kit</li>
+        </ul>
+        <a href="https://eswlab.com/products/esl-ailogiclabs/fixcreator/" target="_blank" class="product-link">למידע נוסף ←</a>
+      </div>
+      <div class="product-card">
+        <div style="font-size: 2.2rem;">⚡</div>
+        <h3>Amp — AI Coding Agent</h3>
+        <p>סוכן AI לכתיבה, הבנה ושיפור קוד</p>
+        <ul class="product-features">
+          <li>הבנה עמוקה של Codebase</li>
+          <li>Refactoring חוצה-קבצים</li>
+          <li>Unit Tests אוטומטי</li>
+          <li>IDE או CLI</li>
+        </ul>
+        <a href="https://ampcode.com" target="_blank" class="product-link">למידע נוסף ←</a>
+      </div>
+      <div class="product-card">
+        <div style="font-size: 2.2rem;">🔬</div>
+        <h3>Parasoft C/C++test</h3>
+        <p>SAST, DAST, Coverage, Unit Testing</p>
+        <ul class="product-features">
+          <li>MISRA C/C++:2023 מלא</li>
+          <li>DO-178C, ISO 26262</li>
+          <li>AI-Assisted Analysis</li>
+          <li>שילוב CI/CD מלא</li>
+        </ul>
+        <a href="https://eswlab.com/products/parasoft/" target="_blank" class="product-link">למידע נוסף ←</a>
+      </div>
+      <div class="product-card">
+        <div style="font-size: 2.2rem;">🔎</div>
+        <h3>Sourcegraph</h3>
+        <p>חיפוש קוד ואינטליגנציה</p>
+        <ul class="product-features">
+          <li>חיפוש חוצה-Repos</li>
+          <li>Code Intelligence</li>
+          <li>Batch Changes</li>
+        </ul>
+        <a href="https://eswlab.com/products/sourcegraph/" target="_blank" class="product-link">למידע נוסף ←</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 10: Standards + Summary -->
+<div class="slide" data-slide="9">
+  <div class="slide-inner">
+    <div class="section-tag">סיכום ומבט לעתיד</div>
+    <h2>מ-2011 ל-2026: מה השתנה — ולאן הולכים?</h2>
+    <div class="two-col" style="margin-bottom: 1.5rem;">
+      <div>
+        <h3 style="margin-bottom: 0.8rem;">מה השתנה?</h3>
+        <div style="color: var(--text-secondary); font-size: 0.88rem;">
+          <p style="margin-bottom: 0.5rem;">✅ <strong style="color: var(--text-primary);">גלובליים</strong> — שגיאות שחמקו מ-SAST כיום נתפסות ע"י AI</p>
+          <p style="margin-bottom: 0.5rem;">✅ <strong style="color: var(--text-primary);">תיקון אוטומטי</strong> — <a href="https://eswlab.com/products/esl-ailogiclabs/fixcreator/" target="_blank" style="color: var(--accent-cyan);">FixCreator</a> ברשת מבודדת + Audit Trail</p>
+          <p style="margin-bottom: 0.5rem;">✅ <strong style="color: var(--text-primary);">MISRA C/C++:2023</strong> — C11, C18, C++17, Atomics, Concurrency</p>
+          <p style="margin-bottom: 0.5rem;">✅ <strong style="color: var(--text-primary);">Shift-Left</strong> — SAST+AI ישירות ב-IDE</p>
+          <p>✅ <strong style="color: var(--text-primary);">קוד AI-Generated</strong> — Guardrails חובה</p>
+        </div>
+      </div>
+      <div>
+        <h3 style="margin-bottom: 0.8rem;">מבט לעתיד</h3>
+        <div style="color: var(--text-secondary); font-size: 0.88rem;">
+          <p style="margin-bottom: 0.5rem;">🔮 <strong style="color: var(--accent-purple);">Formal Verification + AI</strong></p>
+          <p style="margin-bottom: 0.5rem;">🔮 <strong style="color: var(--accent-purple);">Agentic Development Lifecycle</strong></p>
+          <p style="margin-bottom: 0.5rem;">🔮 <strong style="color: var(--accent-purple);">Real-Time SAST ב-IDE</strong></p>
+          <p style="margin-bottom: 0.5rem;">🔮 <strong style="color: var(--accent-purple);">SBOM + SAST</strong></p>
+          <p>🔮 <strong style="color: var(--accent-purple);">Air-Gapped AI בכל מקום</strong></p>
+        </div>
+      </div>
+    </div>
+    <div class="original-quote" style="margin-bottom: 1rem;">
+      "לראשונה עומד לרשות מפתחי התוכנה כלי, המסוגל לא רק לאתר שגיאות אלא גם <em>לספק הוכחה להעדרן</em>. מדובר בכלי שימושי ביותר ביישומים קריטיים, ואין פלא שהשימוש בו אומץ לבדיקת קוד בפרויקטי תעופה כגון AirBus, בבקרת מערכות רכבות, כורים אטומים ויישומים קריטיים דומים אחרים."
+      <br><a class="oq-link" href="https://www.new-techonline.com/2011/05/%D7%A0%D7%99%D7%AA%D7%95%D7%97-%D7%A7%D7%95%D7%93-%D7%A1%D7%98%D7%90%D7%98%D7%99-%D7%95%D7%91%D7%93%D7%99%D7%A7%D7%95%D7%AA-%D7%A7%D7%95%D7%93-%D7%93%D7%99%D7%A0%D7%90%D7%9E%D7%99%D7%95%D7%AA-%D7%9B/" target="_blank">→ סיכום המאמר המקורי, New-Tech 2011</a>
+    </div>
+    <div class="counter-section">
+      <div class="counter-item"><div class="counter-value">15</div><div class="counter-label">שנות אבולוציה</div></div>
+      <div class="counter-item"><div class="counter-value">4→∞</div><div class="counter-label">שיטות בדיקה (כולל AI)</div></div>
+      <div class="counter-item"><div class="counter-value">0→1</div><div class="counter-label">תיקון Air-Gapped</div></div>
+      <div class="counter-item"><div class="counter-value">$1.32B</div><div class="counter-label">שוק SAST ב-2030</div></div>
+    </div>
+    <div style="text-align: center; margin-top: 1.5rem; color: var(--text-muted); font-size: 0.85rem;">
+      <strong style="color: var(--text-primary);">דניאל לייזרוביץ</strong> · <a href="https://eswlab.com" target="_blank" style="color: var(--accent-cyan); text-decoration: none;">Engineering Software Lab (ESL)</a> · <a href="mailto:daniel.l@eswlab.com" style="color: var(--accent-cyan); text-decoration: none;">daniel.l@eswlab.com</a>
+      <br><span style="font-size: 0.72rem;">מבוסס על מאמר מקורי ב-<a href="https://www.new-techonline.com/2011/05/%D7%A0%D7%99%D7%AA%D7%95%D7%97-%D7%A7%D7%95%D7%93-%D7%A1%D7%98%D7%90%D7%98%D7%99-%D7%95%D7%91%D7%93%D7%99%D7%A7%D7%95%D7%AA-%D7%A7%D7%95%D7%93-%D7%93%D7%99%D7%A0%D7%90%D7%9E%D7%99%D7%95%D7%AA-%D7%9B/" target="_blank" style="color: var(--accent-cyan);">New-Tech Magazine, 2011</a> · מהדורה מעודכנת אפריל 2026</span>
+    </div>
+  </div>
+</div>
+
+</div><!-- /slides-track -->
+
+<script>
+(function() {
+  const track = document.getElementById('slidesTrack');
+  const slides = document.querySelectorAll('.slide');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const progressFill = document.getElementById('progressFill');
+  const currentSlideEl = document.getElementById('currentSlide');
+  const totalSlidesEl = document.getElementById('totalSlides');
+  const dotsNav = document.getElementById('dotsNav');
+  const kbHint = document.getElementById('kbHint');
+  const total = slides.length;
+  let current = 0;
+  let isAnimating = false;
+
+  totalSlidesEl.textContent = total;
+
+  // Build dots
+  for (let i = 0; i < total; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => goTo(i));
+    dotsNav.appendChild(dot);
+  }
+
+  function goTo(index) {
+    if (isAnimating || index === current || index < 0 || index >= total) return;
+    isAnimating = true;
+
+    slides[current].classList.remove('active');
+    current = index;
+    slides[current].classList.add('active');
+
+    // RTL: slides go right-to-left, so translate positive for "next" in RTL
+    track.style.transform = `translateX(${current * 100}vw)`;
+
+    // Update UI
+    currentSlideEl.textContent = current + 1;
+    progressFill.style.width = ((current / (total - 1)) * 100) + '%';
+    prevBtn.classList.toggle('disabled', current === 0);
+    nextBtn.classList.toggle('disabled', current === total - 1);
+
+    // Update dots
+    dotsNav.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+
+    // Hide keyboard hint after first nav
+    kbHint.classList.add('hidden');
+
+    setTimeout(() => { isAnimating = false; }, 700);
+  }
+
+  function next() { goTo(current + 1); }
+  function prev() { goTo(current - 1); }
+
+  prevBtn.addEventListener('click', prev);
+  nextBtn.addEventListener('click', next);
+
+  // Keyboard
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') next();       // RTL: left arrow = next
+    else if (e.key === 'ArrowRight') prev();  // RTL: right arrow = prev
+    else if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
+    else if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+    else if (e.key === 'Home') goTo(0);
+    else if (e.key === 'End') goTo(total - 1);
+  });
+
+  // Touch / Swipe
+  let touchStartX = 0, touchStartY = 0;
+  document.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      if (dx > 0) next();  // RTL: swipe right = next
+      else prev();
+    }
+  }, { passive: true });
+
+  // Mouse wheel (horizontal feel)
+  let wheelTimeout;
+  document.addEventListener('wheel', (e) => {
+    if (wheelTimeout) return;
+    wheelTimeout = setTimeout(() => { wheelTimeout = null; }, 800);
+    if (e.deltaY > 30 || e.deltaX < -30) next();
+    else if (e.deltaY < -30 || e.deltaX > 30) prev();
+  }, { passive: true });
+
+  // Init first slide as active
+  slides[0].classList.add('active');
+})();
+
+// ===== Particle Background =====
+(function() {
+  const canvas = document.getElementById('particles');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+  for (let i = 0; i < 50; i++) {
+    particles.push({
+      x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3,
+      r: Math.random() * 2 + 0.5, o: Math.random() * 0.25 + 0.05
+    });
+  }
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = canvas.width; if (p.x > canvas.width) p.x = 0;
+      if (p.y < 0) p.y = canvas.height; if (p.y > canvas.height) p.y = 0;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(59,130,246,${p.o})`; ctx.fill();
+    });
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 140) {
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(59,130,246,${0.06 * (1 - dist / 140)})`;
+          ctx.lineWidth = 0.5;
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>
