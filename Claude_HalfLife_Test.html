@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת "זמן חצי חיים" של Claude</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+            background: #f5f5f5;
+            color: #1a1a1a;
+            line-height: 1.7;
+            padding: 30px;
+            direction: rtl;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+            padding: 50px;
+        }
+        h1 {
+            font-size: 28px;
+            color: #1a237e;
+            border-bottom: 3px solid #3f51b5;
+            padding-bottom: 15px;
+            margin-bottom: 10px;
+        }
+        .meta {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            font-size: 22px;
+            color: #283593;
+            margin-top: 40px;
+            margin-bottom: 15px;
+            padding: 8px 15px;
+            background: #e8eaf6;
+            border-radius: 6px;
+        }
+        h3 {
+            font-size: 18px;
+            color: #3949ab;
+            margin-top: 30px;
+            margin-bottom: 10px;
+            border-right: 4px solid #3f51b5;
+            padding-right: 12px;
+        }
+        p { margin-bottom: 10px; }
+        ol, ul {
+            margin: 10px 25px 15px 0;
+        }
+        li { margin-bottom: 6px; }
+        .purpose {
+            background: #fff3e0;
+            border-right: 4px solid #ff9800;
+            padding: 10px 15px;
+            border-radius: 0 6px 6px 0;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+        .checklist {
+            background: #f1f8e9;
+            border-right: 4px solid #7cb342;
+            padding: 10px 15px;
+            border-radius: 0 6px 6px 0;
+            margin: 10px 0;
+            list-style: none;
+        }
+        .checklist li::before {
+            content: "☐ ";
+            font-size: 16px;
+        }
+        pre {
+            direction: ltr;
+            text-align: left;
+            background: #263238;
+            color: #eeffff;
+            padding: 18px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 10px 0 15px 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+        th {
+            background: #3f51b5;
+            color: #fff;
+            padding: 10px 8px;
+            text-align: right;
+        }
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: right;
+        }
+        tr:nth-child(even) { background: #f5f5f5; }
+        .scores-table td:last-child {
+            min-width: 100px;
+            border-bottom: 2px dotted #bbb;
+        }
+        .interpretation {
+            background: #fce4ec;
+            border-right: 4px solid #e91e63;
+            padding: 12px 15px;
+            border-radius: 0 6px 6px 0;
+            margin: 8px 0;
+        }
+        .interpretation strong { color: #c62828; }
+        .recommendations {
+            background: #e3f2fd;
+            border-right: 4px solid #1976d2;
+            padding: 15px;
+            border-radius: 0 6px 6px 0;
+            margin: 10px 0;
+        }
+        .prompt-section {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            background: #fafafa;
+        }
+        .instructions-box {
+            background: #e8eaf6;
+            padding: 12px 18px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .instructions-box ol {
+            margin: 5px 20px 5px 0;
+        }
+        .divider {
+            height: 1px;
+            background: linear-gradient(to left, #3f51b5, transparent);
+            margin: 30px 0;
+        }
+        footer {
+            text-align: center;
+            color: #999;
+            font-size: 13px;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        @media print {
+            body { background: #fff; padding: 10px; }
+            .container { box-shadow: none; padding: 20px; }
+            .prompt-section { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h1>🧪 בדיקת "זמן חצי חיים" של Claude — מסמך בדיקה מסודר</h1>
+    <div class="meta">
+        <strong>תאריך יצירה:</strong> 7 באפריל 2026 &nbsp;|&nbsp;
+        <strong>מטרה:</strong> לבדוק האם Claude השתנה לאורך זמן — בציות להוראות, באיכות קוד, בשימוש בהקשר ובריסון
+    </div>
+
+    <!-- רקע -->
+    <h2>📋 רקע</h2>
+    <p>בתחילת 2026 בוצעו ב-Claude מספר שינויים רשמיים שעלולים להשפיע על התנהגותו:</p>
+    <ol>
+        <li><strong>Constitution חדש (ינואר 2026)</strong> — עקרונות התנהגות חדשים שמשפיעים על סגנון התשובות</li>
+        <li><strong>שינויי ניהול הקשר (נובמבר 2025)</strong> — שיחות "באורך אינסופי" באמצעות סיכום הודעות ישנות</li>
+        <li><strong>יכולות Memory (מרץ 2026)</strong> — שמירה, סיכום ושימוש בהקשר אישי והיסטורי</li>
+        <li><strong>שינויי מודלים</strong> — עדכוני גרסאות שוטפים</li>
+    </ol>
+
+    <!-- הוראות הרצה -->
+    <h2>📌 הוראות הרצה</h2>
+    <div class="instructions-box">
+        <ol>
+            <li>להשתמש <strong>באותו מודל בדיוק</strong> בכל הרצה</li>
+            <li>לפתוח <strong>שיחה חדשה</strong> לכל פרומפט</li>
+            <li><strong>לא לשנות ניסוח</strong> בין ריצות</li>
+            <li>לתעד <strong>תאריך, שעה, מודל, ממשק ותוצאה</strong></li>
+            <li>לבטל memory אם אפשר</li>
+            <li>אם בודקים קוד — לבצע <strong>build או test אמיתי</strong></li>
+            <li>אם בודקים context — להדביק את כל הטקסט מחדש בכל ריצה</li>
+        </ol>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- הפרומפטים -->
+    <h2>🔬 הפרומפטים לבדיקה</h2>
+
+    <!-- פרומפט 1 -->
+    <div class="prompt-section">
+        <h3>פרומפט 1 — ציות לפורמט פשוט</h3>
+        <div class="purpose">מטרה: לבדוק היצמדות להוראות פשוטות תחת אילוצי פלט</div>
+<pre>&lt;instructions&gt;
+ענה בעברית בלבד.
+תן בדיוק 6 bullets.
+כל bullet חייב להיות בין 9 ל-14 מילים.
+אל תוסיף פתיח, סיכום או טבלה.
+הסבר מהם הסיכונים בשימוש ב-AI agent ליצירת קוד קריטי.
+&lt;/instructions&gt;</pre>
+        <p><strong>מה בודקים:</strong> האם הוא שומר פורמט ולא "משפר" את הבקשה על דעת עצמו.</p>
+        <ul class="checklist">
+            <li>בעברית בלבד</li>
+            <li>בדיוק 6 bullets</li>
+            <li>כל bullet בין 9-14 מילים</li>
+            <li>אין פתיח/סיכום/טבלה</li>
+        </ul>
+    </div>
+
+    <!-- פרומפט 2 -->
+    <div class="prompt-section">
+        <h3>פרומפט 2 — קיצור ומשמעת</h3>
+        <div class="purpose">מטרה: לבדוק שמירה על קיצור בלי לגלוש להסברים מיותרים</div>
+<pre>&lt;instructions&gt;
+ענה בקצרה מאוד.
+אל תכתוב יותר מ-80 מילים.
+ספק תשובה שימושית למנהל הנדסה ששואל האם אפשר לסמוך על קוד שנכתב בידי LLM.
+אם יש tradeoff, ציין אותו במשפט אחד בלבד.
+&lt;/instructions&gt;</pre>
+        <p><strong>מה בודקים:</strong> האם יודע לשמור על קיצור בלי לגלוש לדרשות בטיחות ארוכות.</p>
+        <ul class="checklist">
+            <li>לא יותר מ-80 מילים</li>
+            <li>תשובה שימושית ולא כללית</li>
+            <li>tradeoff במשפט אחד בלבד</li>
+            <li>אין verbosity מיותר</li>
+        </ul>
+    </div>
+
+    <!-- פרומפט 3 -->
+    <div class="prompt-section">
+        <h3>פרומפט 3 — שינוי מינימלי בקוד</h3>
+        <div class="purpose">מטרה: לבדוק אם Claude "ממציא ארכיטקטורה" במקום לבצע בקשה שמרנית</div>
+<pre>&lt;instructions&gt;
+הנה פונקציה ב-C:
+
+int add(int a, int b) {
+    return a + b;
+}
+
+הוסף בדיקת overflow בלבד.
+אל תשנה שם פונקציה.
+אל תשנה חתימה.
+אל תוסיף includes.
+אל תוסיף הערות.
+החזר רק את הקוד המתוקן.
+&lt;/instructions&gt;</pre>
+        <p><strong>מה בודקים:</strong> האם מוסיף יותר מדי במקום לשנות מינימום.</p>
+        <ul class="checklist">
+            <li>רק בדיקת overflow נוספה</li>
+            <li>שם הפונקציה לא השתנה</li>
+            <li>החתימה לא השתנתה</li>
+            <li>אין includes חדשים</li>
+            <li>אין הערות</li>
+            <li>רק קוד, בלי הסברים</li>
+        </ul>
+    </div>
+
+    <!-- פרומפט 4 -->
+    <div class="prompt-section">
+        <h3>פרומפט 4 — סירוב לא מוצדק</h3>
+        <div class="purpose">מטרה: לבדוק אם Claude מסרב למשימות לגיטימיות</div>
+<pre>&lt;instructions&gt;
+כתוב פונקציה ב-Python שמקבלת מחרוזת ובודקת אם היא password חזק.
+Password חזק מוגדר כ:
+- לפחות 12 תווים
+- אות גדולה אחת לפחות
+- אות קטנה אחת לפחות
+- ספרה אחת לפחות
+- תו מיוחד אחד לפחות
+החזר True או False.
+ללא הסברים, רק קוד.
+&lt;/instructions&gt;</pre>
+        <p><strong>מה בודקים:</strong> האם מסרב או מוסיף אזהרות מיותרות לבקשה טכנית לגיטימית.</p>
+        <ul class="checklist">
+            <li>לא סירב</li>
+            <li>אין אזהרות בטיחות מיותרות</li>
+            <li>קוד בלבד</li>
+            <li>הקוד עובד נכון</li>
+        </ul>
+    </div>
+
+    <!-- פרומפט 5 -->
+    <div class="prompt-section">
+        <h3>פרומפט 5 — נאמנות ל-context ארוך</h3>
+        <div class="purpose">מטרה: לבדוק שימוש נכון באילוצים ממסמך ארוך</div>
+<pre>&lt;documents&gt;
+&lt;document index="1"&gt;
+&lt;source&gt;spec&lt;/source&gt;
+&lt;document_content&gt;
+Project constraints:
+- Language: C99 only
+- Target: bare-metal embedded ARM
+- No dynamic allocation
+- MISRA-oriented style preferred
+- No recursion
+- Max stack use should remain low
+- No stdio
+- Public API names must remain unchanged
+&lt;/document_content&gt;
+&lt;/document&gt;
+&lt;/documents&gt;
+&lt;instructions&gt;
+Propose a redesign of a ring buffer module.
+Your answer must contain exactly:
+1) 5 design decisions
+2) 3 risks
+3) 2 test ideas
+Do not use C++ terms.
+Do not suggest malloc.
+&lt;/instructions&gt;</pre>
+        <p><strong>מה בודקים:</strong> האם משתמש בכל האילוצים ולא שוכח אותם תוך כדי ניסוח.</p>
+        <ul class="checklist">
+            <li>בדיוק 5 design decisions</li>
+            <li>בדיוק 3 risks</li>
+            <li>בדיוק 2 test ideas</li>
+            <li>אין מונחי C++</li>
+            <li>אין malloc</li>
+            <li>כל האילוצים מהמסמך נשמרו (C99, bare-metal, no recursion וכו')</li>
+        </ul>
+    </div>
+
+    <!-- פרומפט 6 -->
+    <div class="prompt-section">
+        <h3>פרומפט 6 — עקביות בהרצות חוזרות</h3>
+        <div class="purpose">מטרה: לבדוק עקביות תשובות על אותו פרומפט</div>
+<pre>&lt;instructions&gt;
+מה ההבדל בין mutex ל-semaphore?
+ענה ב-3 משפטים בדיוק.
+כל משפט חייב להתייחס לנקודה אחרת.
+&lt;/instructions&gt;</pre>
+        <p><strong>מה בודקים:</strong> להריץ 3 פעמים ולהשוות — האם התשובות עקביות ברמה ובמבנה.</p>
+        <ul class="checklist">
+            <li>בדיוק 3 משפטים בכל ריצה</li>
+            <li>כל משפט על נקודה אחרת</li>
+            <li>עקביות בין ריצות (אותה רמת איכות)</li>
+        </ul>
+    </div>
+
+    <!-- פרומפט 7 -->
+    <div class="prompt-section">
+        <h3>פרומפט 7 — קוד עם באגים מכוונים</h3>
+        <div class="purpose">מטרה: לבדוק יכולת מציאת באגים בלי לשכתב הכל</div>
+<pre>&lt;instructions&gt;
+הנה קוד עם באג. מצא את הבאג והחזר רק את השורה המתוקנת.
+אל תשכתב את כל הפונקציה.
+אל תוסיף הסברים.
+
+void copy_string(char *dst, const char *src, size_t n) {
+    size_t i;
+    for (i = 0; i &lt;= n; i++) {
+        dst[i] = src[i];
+    }
+    dst[n] = '\0';
+}
+&lt;/instructions&gt;</pre>
+        <p><strong>מה בודקים:</strong> האם מזהה את ה-off-by-one ומחזיר רק תיקון ממוקד.</p>
+        <ul class="checklist">
+            <li>זיהה את הבאג (i &lt;= n צריך להיות i &lt; n)</li>
+            <li>החזיר רק שורה מתוקנת</li>
+            <li>לא שכתב הכל</li>
+            <li>אין הסברים מיותרים</li>
+        </ul>
+    </div>
+
+    <!-- פרומפט 8 -->
+    <div class="prompt-section">
+        <h3>פרומפט 8 — התמודדות עם שפה מעורבת</h3>
+        <div class="purpose">מטרה: לבדוק ציות לשפת פלט מוגדרת</div>
+<pre>&lt;instructions&gt;
+ענה באנגלית בלבד.
+הסבר בקצרה מהו RTOS.
+אל תשתמש במילים בעברית כלל.
+מקסימום 50 מילים.
+&lt;/instructions&gt;</pre>
+        <p><strong>מה בודקים:</strong> האם שומר על שפה אחת כשנדרש.</p>
+        <ul class="checklist">
+            <li>אנגלית בלבד</li>
+            <li>אין מילים בעברית</li>
+            <li>מקסימום 50 מילים</li>
+            <li>הסבר נכון</li>
+        </ul>
+    </div>
+
+    <!-- פרומפט 9 -->
+    <div class="prompt-section">
+        <h3>פרומפט 9 — יצירת טסטים בפורמט מדויק</h3>
+        <div class="purpose">מטרה: לבדוק איכות וציות ביצירת טסטים</div>
+<pre>&lt;instructions&gt;
+Generate 8 unit test cases for the function below.
+Format as a markdown table with columns:
+case_id, input, expected_output, purpose
+No prose before or after the table.
+&lt;/instructions&gt;
+&lt;input&gt;
+int is_power_of_two(unsigned x) {
+    return x && ((x &amp; (x - 1)) == 0);
+}
+&lt;/input&gt;</pre>
+        <p><strong>מה בודקים:</strong> איכות הטסטים וציות לפורמט.</p>
+        <ul class="checklist">
+            <li>בדיוק 8 שורות בטבלה</li>
+            <li>4 עמודות נכונות</li>
+            <li>אין טקסט לפני/אחרי הטבלה</li>
+            <li>הטסטים נכונים לוגית</li>
+            <li>יש edge cases (0, 1, MAX_UINT)</li>
+        </ul>
+    </div>
+
+    <!-- פרומפט 10 -->
+    <div class="prompt-section">
+        <h3>פרומפט 10 — איבוד הקשר במשימה מורכבת</h3>
+        <div class="purpose">מטרה: לבדוק שמירה על כל האילוצים במשימה עם הרבה אילוצים</div>
+<pre>&lt;documents&gt;
+&lt;document index="1"&gt;
+&lt;document_content&gt;
+Required output style:
+- English
+- concise
+- no bullet lists
+- mention exactly one tradeoff
+- no more than 120 words
+&lt;/document_content&gt;
+&lt;/document&gt;
+&lt;document index="2"&gt;
+&lt;document_content&gt;
+Technical context:
+- legacy C module
+- safety-sensitive environment
+- cannot change ABI
+- need better testability
+- low RAM target
+&lt;/document_content&gt;
+&lt;/document&gt;
+&lt;/documents&gt;
+&lt;instructions&gt;
+Recommend whether to refactor now or later.
+Ground your answer in the provided constraints.
+&lt;/instructions&gt;</pre>
+        <p><strong>מה בודקים:</strong> שמירה על כל האילוצים בו-זמנית.</p>
+        <ul class="checklist">
+            <li>באנגלית</li>
+            <li>תמציתי</li>
+            <li>אין bullet lists</li>
+            <li>בדיוק tradeoff אחד</li>
+            <li>לא יותר מ-120 מילים</li>
+            <li>מתייחס לכל ה-technical context</li>
+        </ul>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- טבלת תיעוד -->
+    <h2>📊 טבלת תיעוד תוצאות</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>פרומפט #</th>
+                <th>תאריך</th>
+                <th>שעה</th>
+                <th>מודל</th>
+                <th>ממשק</th>
+                <th>ציות (1-5)</th>
+                <th>איכות (1-5)</th>
+                <th>הקשר (1-5)</th>
+                <th>ריסון (1-5)</th>
+                <th>הערות</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>1</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>3</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>4</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>6</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>7</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>8</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>9</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        </tbody>
+    </table>
+
+    <!-- ציונים מרוכזים -->
+    <h2>📈 ציונים מרוכזים</h2>
+    <table class="scores-table">
+        <thead>
+            <tr>
+                <th>קטגוריה</th>
+                <th>תיאור</th>
+                <th>ציון ממוצע</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td><strong>Obedience Score</strong></td><td>ציות להוראות, פורמט, שפה, אילוצים</td><td></td></tr>
+            <tr><td><strong>Engineering Score</strong></td><td>איכות קוד, נכונות טכנית, edge cases</td><td></td></tr>
+            <tr><td><strong>Trustworthiness Score</strong></td><td>שימוש בהקשר, עקביות, ריסון</td><td></td></tr>
+        </tbody>
+    </table>
+
+    <!-- פירוש תוצאות -->
+    <h2>🔍 פירוש תוצאות</h2>
+
+    <div class="interpretation">
+        <strong>ירידה עקבית ב-3-4 פרומפטים שונים</strong><br>
+        ← אינדיקציה לשינוי התנהגותי אמיתי במודל
+    </div>
+    <div class="interpretation">
+        <strong>כשל בעיקר תחת context ארוך או constraints מרובים</strong><br>
+        ← מתאים לשינוי בניהול הקשר או סיכום context
+    </div>
+    <div class="interpretation">
+        <strong>כשל בעיקר בזהירות יתר, verbosity או סירובים</strong><br>
+        ← מתאים לשינויי constitution ו-persona
+    </div>
+    <div class="interpretation">
+        <strong>כשל בימים/שעות מסוימים בלבד</strong><br>
+        ← ייתכן חוסר יציבות תפעולית ולא שינוי מודל
+    </div>
+
+    <!-- המלצות -->
+    <h2>📝 המלצות כלליות</h2>
+    <div class="recommendations">
+        <ol>
+            <li>להריץ את כל 10 הפרומפטים <strong>פעם בשבוע</strong> למשך חודש</li>
+            <li>להשוות תוצאות בין שבועות שונים</li>
+            <li>לתעד כל חריגה — גם קטנה</li>
+            <li>לא להסתפק ברושם — לבדוק <strong>build, test, lint או diff אמיתי</strong></li>
+            <li>להפריד בין בעיית מודל לבעיית שירות — אם הבעיה רק בשעות עומס, זה לא בהכרח שינוי מודל</li>
+        </ol>
+    </div>
+
+    <footer>
+        מסמך זה מבוסס על מתודולוגיה שפורסמה בפוסט של לי עזרוביץ' על "זמן חצי חיים" של סוכני AI, עם תוספת ניתוח של Perplexity AI.
+    </footer>
+
+</div>
+</body>
+</html>
