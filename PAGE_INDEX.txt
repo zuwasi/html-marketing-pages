@@ -61,13 +61,16 @@ Last updated: 2026-04-14
 17. amp-vs-token-optimizer-presentation.html
    https://zuwasi.github.io/Public-html-pages/amp-vs-token-optimizer-presentation.html
 
-18. nono-ampcode-presentation.html
+18. cuda-to-axelera-migration.html
+   https://zuwasi.github.io/Public-html-pages/cuda-to-axelera-migration.html
+
+19. nono-ampcode-presentation.html
    https://zuwasi.github.io/Public-html-pages/nono-ampcode-presentation.html
 
-19. static-code-analysis-2026.html
+20. static-code-analysis-2026.html
    https://zuwasi.github.io/Public-html-pages/static-code-analysis-2026.html
 
-20. why-amp-doesnt-need-node9-proxy.html
+21. why-amp-doesnt-need-node9-proxy.html
    https://zuwasi.github.io/Public-html-pages/why-amp-doesnt-need-node9-proxy.html
 
 ──────────────────────────────────────────────────────────────
@@ -80,6 +83,9 @@ Last updated: 2026-04-14
 • Ampcode_CISO_Security_Assessment_Report.txt
   https://zuwasi.github.io/Public-html-pages/Ampcode_CISO_Security_Assessment_Report.txt
 
+• ESL-AI-LOGOS.png
+  https://zuwasi.github.io/Public-html-pages/ESL-AI-LOGOS.png
+
 • agent-halflife-tester-guide.md
   https://zuwasi.github.io/Public-html-pages/agent-halflife-tester-guide.md
 
@@ -91,6 +97,9 @@ Last updated: 2026-04-14
 
 • amp-workflow.png
   https://zuwasi.github.io/Public-html-pages/amp-workflow.png
+
+• axelera-logo-white.png
+  https://zuwasi.github.io/Public-html-pages/axelera-logo-white.png
 
 • nono-logo.png
   https://zuwasi.github.io/Public-html-pages/nono-logo.png
