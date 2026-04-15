@@ -97,6 +97,9 @@ ul.heb li::before{content:'◆';position:absolute;right:0;color:var(--accent-cya
 .perm-card.reject{background:rgba(226,30,38,.08);border:1px solid rgba(226,30,38,.3)}
 .perm-card.delegate{background:rgba(0,191,255,.08);border:1px solid rgba(0,191,255,.3)}
 .perm-label{direction:ltr;font-family:var(--font-mono);font-weight:600;font-size:.9em}
+/* slide number */
+.slide-num{position:absolute;top:16px;right:20px;font-family:var(--font-mono);font-size:12px;color:var(--text-muted);opacity:.6;direction:ltr}
+.slide{position:relative}
 </style>
 </head>
 <body>
@@ -126,6 +129,7 @@ ul.heb li::before{content:'◆';position:absolute;right:0;color:var(--accent-cya
 
 <!-- SLIDE 1 — Title -->
 <div class="slide">
+<span class="slide-num">1 / 11</span>
 <div class="slide-content" style="text-align:center">
 <img src="amp-logo.png" alt="Amp Logo" class="logo-img">
 <h1 style="font-size:clamp(1.6em,3.5vw,2.6em);margin-bottom:12px">למה הבאג הזה לא יכול לקרות<br><span class="accent-text">ב־<bdi dir="ltr">Ampcode</bdi></span></h1>
@@ -136,6 +140,7 @@ ul.heb li::before{content:'◆';position:absolute;right:0;color:var(--accent-cya
 
 <!-- SLIDE 2 — What happened -->
 <div class="slide">
+<span class="slide-num">2 / 11</span>
 <div class="slide-content">
 <h2 style="font-size:clamp(1.3em,2.5vw,2em);margin-bottom:8px">🔴 מה בעצם קרה?</h2>
 <p style="color:var(--text-secondary);margin-bottom:20px">האירוע שהתרחש ב־<bdi dir="ltr">Claude Code</bdi></p>
@@ -156,11 +161,30 @@ ul.heb li::before{content:'◆';position:absolute;right:0;color:var(--accent-cya
 <li>המשתמש לא קיבל שום התראה</li>
 </ul>
 </div>
+<div class="card" dir="ltr" style="border-right:none;border-left:4px solid var(--accent-orange);text-align:left">
+<h3 style="margin-bottom:12px;color:var(--accent-orange);font-family:var(--font-heading)">Anthropic's Response — A Pattern of Dismissal</h3>
+<ul style="list-style:none;padding:0">
+<li style="margin-bottom:8px;color:var(--text-secondary);padding-left:24px;position:relative"><span style="position:absolute;left:0;color:var(--accent-orange);font-size:.7em;top:5px">◆</span>MCP prompt injection has <strong>no CVE, no advisory, no acknowledgment</strong> from Anthropic</li>
+<li style="margin-bottom:8px;color:var(--text-secondary);padding-left:24px;position:relative"><span style="position:absolute;left:0;color:var(--accent-orange);font-size:.7em;top:5px">◆</span>Anthropic's own blog admits: <em>"A 1% attack success rate still represents meaningful risk"</em> — yet offers no architectural fix</li>
+<li style="margin-bottom:8px;color:var(--text-secondary);padding-left:24px;position:relative"><span style="position:absolute;left:0;color:var(--accent-orange);font-size:.7em;top:5px">◆</span><a href="https://www.oasis.security/blog/claude-ai-prompt-injection-data-exfiltration-vulnerability" target="_blank" style="color:var(--accent-cyan);text-decoration:none">Oasis Security "Claudy Day"</a> — full attack pipeline against default Claude.ai, no MCP needed</li>
+<li style="margin-bottom:8px;color:var(--text-secondary);padding-left:24px;position:relative"><span style="position:absolute;left:0;color:var(--accent-orange);font-size:.7em;top:5px">◆</span><a href="https://phoenix.security/claude-code-leak-to-vulnerability-three-cves-in-claude-code-cli-and-the-chain-that-connects-them/" target="_blank" style="color:var(--accent-cyan);text-decoration:none">Phoenix Security</a> reported 3 command injection CVEs — Anthropic closed 2 of 3 as <strong style="color:var(--accent-red)">"Informative"</strong></li>
+<li style="margin-bottom:8px;color:var(--text-secondary);padding-left:24px;position:relative"><span style="position:absolute;left:0;color:var(--accent-orange);font-size:.7em;top:5px">◆</span><a href="https://snyk.io/blog/toxicskills-malicious-ai-agent-skills-clawhub/" target="_blank" style="color:var(--accent-cyan);text-decoration:none">Snyk "ToxicSkills"</a> — 534 critical-level malicious skills affecting Claude Code ecosystem</li>
+<li style="margin-bottom:8px;color:var(--text-secondary);padding-left:24px;position:relative"><span style="position:absolute;left:0;color:var(--accent-orange);font-size:.7em;top:5px">◆</span>No security advisory issued to users, no mitigation guidance published</li>
+</ul>
+<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:.78em;color:var(--text-muted)">
+Documented similar attacks:
+<a href="https://www.oasis.security/blog/claude-ai-prompt-injection-data-exfiltration-vulnerability" target="_blank" style="color:var(--text-muted);text-decoration:underline">Oasis "Claudy Day"</a> ·
+<a href="https://snyk.io/blog/toxicskills-malicious-ai-agent-skills-clawhub/" target="_blank" style="color:var(--text-muted);text-decoration:underline">Snyk ToxicSkills</a> ·
+<a href="https://www.straiker.ai/blog/claude-code-source-leak-with-great-agency-comes-great-responsibility" target="_blank" style="color:var(--text-muted);text-decoration:underline">Straiker MCP Context Poisoning</a> ·
+<a href="https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/" target="_blank" style="color:var(--text-muted);text-decoration:underline">OWASP Top 10 Agentic 2026</a>
+</div>
+</div>
 </div>
 </div>
 
 <!-- SLIDE 3 — Root cause -->
 <div class="slide">
+<span class="slide-num">3 / 11</span>
 <div class="slide-content">
 <h2 style="font-size:clamp(1.3em,2.5vw,2em);margin-bottom:24px">🔍 מה באמת גרם לזה?</h2>
 <div class="two-col">
@@ -192,6 +216,7 @@ ul.heb li::before{content:'◆';position:absolute;right:0;color:var(--accent-cya
 
 <!-- SLIDE 4 — Layer 1: MCP Trust -->
 <div class="slide">
+<span class="slide-num">4 / 11</span>
 <div class="slide-content">
 <h2 style="margin-bottom:24px"><span class="layer-num">1</span> אמון שרתים במרחב העבודה</h2>
 <div class="card card-accent">
@@ -227,6 +252,7 @@ ul.heb li::before{content:'◆';position:absolute;right:0;color:var(--accent-cya
 
 <!-- SLIDE 5 — Layer 2: Granular Permissions -->
 <div class="slide">
+<span class="slide-num">5 / 11</span>
 <div class="slide-content">
 <h2 style="margin-bottom:24px"><span class="layer-num">2</span> מערכת הרשאות גרנולרית</h2>
 <div class="card card-accent">
@@ -255,6 +281,7 @@ ul.heb li::before{content:'◆';position:absolute;right:0;color:var(--accent-cya
 
 <!-- SLIDE 6 — Layer 3: MCP Permissions -->
 <div class="slide">
+<span class="slide-num">6 / 11</span>
 <div class="slide-content">
 <h2 style="margin-bottom:24px"><span class="layer-num">3</span> הרשאות ברמת שרת</h2>
 <div class="card card-accent">
@@ -286,6 +313,7 @@ ul.heb li::before{content:'◆';position:absolute;right:0;color:var(--accent-cya
 
 <!-- SLIDE 7 — Layer 4: Secret Redaction -->
 <div class="slide">
+<span class="slide-num">7 / 11</span>
 <div class="slide-content">
 <h2 style="margin-bottom:24px"><span class="layer-num">4</span> מחיקת סודות אוטומטית</h2>
 <div class="card card-accent">
@@ -316,6 +344,7 @@ ul.heb li::before{content:'◆';position:absolute;right:0;color:var(--accent-cya
 
 <!-- SLIDE 8 — Layer 5: Client-Server Architecture -->
 <div class="slide">
+<span class="slide-num">8 / 11</span>
 <div class="slide-content">
 <h2 style="margin-bottom:24px"><span class="layer-num">5</span> ארכיטקטורת לקוח-שרת</h2>
 <div class="card card-accent">
@@ -357,6 +386,7 @@ ul.heb li::before{content:'◆';position:absolute;right:0;color:var(--accent-cya
 
 <!-- SLIDE 9 — Layer 6: Skills & Audits -->
 <div class="slide">
+<span class="slide-num">9 / 11</span>
 <div class="slide-content">
 <h2 style="margin-bottom:24px"><span class="layer-num">6</span> טעינה מבוקרת + ביקורות אבטחה</h2>
 <div class="two-col">
@@ -391,6 +421,7 @@ ul.heb li::before{content:'◆';position:absolute;right:0;color:var(--accent-cya
 
 <!-- SLIDE 10 — Comparison Table -->
 <div class="slide">
+<span class="slide-num">10 / 11</span>
 <div class="slide-content">
 <h2 style="font-size:clamp(1.3em,2.5vw,2em);margin-bottom:24px">📊 השוואה מסכמת</h2>
 <div style="overflow-x:auto">
@@ -441,6 +472,7 @@ ul.heb li::before{content:'◆';position:absolute;right:0;color:var(--accent-cya
 
 <!-- SLIDE 11 — Conclusion -->
 <div class="slide">
+<span class="slide-num">11 / 11</span>
 <div class="slide-content" style="text-align:center">
 <h2 style="font-size:clamp(1.3em,3vw,2.2em);margin-bottom:24px">🛡️ שורה תחתונה</h2>
 <div class="card card-accent" style="text-align:right">
