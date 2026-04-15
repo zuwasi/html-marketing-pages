@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>למה הבאג הזה לא יכול לקרות ב־Ampcode</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Rubik:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg-primary:#050B18;--bg-card:#111D33;
+--accent-cyan:#00BFFF;--accent-red:#E21E26;--accent-green:#00E676;
+--accent-yellow:#FFD700;--accent-orange:#FF9100;
+--text-primary:#FFFFFF;--text-secondary:#A0B4CC;--text-muted:#5A7A9A;
+--border:#1A2D48;
+--font-body:'Heebo',sans-serif;--font-heading:'Rubik','Heebo',sans-serif;--font-mono:'Inter','Courier New',monospace;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-primary);color:var(--text-primary);font-family:var(--font-body);font-size:clamp(14px,1.6vw,18px);line-height:1.7}
+h1,h2,h3,h4{font-family:var(--font-heading);font-weight:700}
+/* slides wrapper — direction:ltr so translateX positive = forward */
+.slides-wrapper{display:flex;direction:ltr;height:100vh;transition:transform .5s cubic-bezier(.4,0,.2,1)}
+.slide{min-width:100vw;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;padding:clamp(20px,4vw,60px);overflow-y:auto}
+.slide-content{direction:rtl;text-align:right;max-width:1100px;width:100%}
+/* nav arrows */
+.nav-btn{position:fixed;top:50%;transform:translateY(-50%);z-index:100;width:52px;height:52px;border-radius:50%;border:2px solid var(--border);background:rgba(17,29,51,.85);color:var(--text-primary);font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);transition:all .25s}
+.nav-btn:hover{background:var(--accent-cyan);border-color:var(--accent-cyan);color:#000}
+.nav-prev{left:18px}.nav-next{right:18px}
+.nav-btn.hidden{opacity:0;pointer-events:none}
+/* progress bar */
+.progress-bar{position:fixed;bottom:0;left:0;width:100%;height:5px;background:rgba(26,45,72,.5);z-index:100}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent-cyan),var(--accent-green));transition:width .4s;border-radius:0 3px 3px 0}
+/* slide counter dots */
+.slide-counter{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:100}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--text-muted);transition:all .3s;cursor:pointer}
+.dot.active{background:var(--accent-cyan);transform:scale(1.3)}
+/* swipe hint */
+.swipe-hint{position:fixed;bottom:50px;left:50%;transform:translateX(-50%);color:var(--text-muted);font-size:14px;animation:swipeAnim 2s infinite;z-index:100;direction:ltr;white-space:nowrap}
+@keyframes swipeAnim{0%,100%{opacity:.4;transform:translateX(-50%)}50%{opacity:1;transform:translateX(-50%) translateX(10px)}}
+.swipe-hint.gone{display:none}
+/* cards */
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:clamp(18px,2.5vw,32px);margin-bottom:16px}
+.card-accent{border-right:4px solid var(--accent-cyan)}
+/* badges — isolated English */
+.badge{display:inline-block;direction:ltr;text-align:center;padding:4px 14px;border-radius:20px;font-family:var(--font-mono);font-size:.82em;font-weight:600;margin:3px}
+.badge-cyan{background:rgba(0,191,255,.15);color:var(--accent-cyan);border:1px solid rgba(0,191,255,.3)}
+.badge-red{background:rgba(226,30,38,.15);color:var(--accent-red);border:1px solid rgba(226,30,38,.3)}
+.badge-green{background:rgba(0,230,118,.15);color:var(--accent-green);border:1px solid rgba(0,230,118,.3)}
+.badge-yellow{background:rgba(255,215,0,.15);color:var(--accent-yellow);border:1px solid rgba(255,215,0,.3)}
+.badge-orange{background:rgba(255,145,0,.15);color:var(--accent-orange);border:1px solid rgba(255,145,0,.3)}
+/* code blocks — English LTR */
+.code-block{direction:ltr;text-align:left;background:#0A1628;border:1px solid var(--border);border-radius:10px;padding:16px 20px;font-family:var(--font-mono);font-size:.85em;color:var(--accent-green);overflow-x:auto;margin:10px 0;white-space:pre;line-height:1.5}
+.code-inline{direction:ltr;display:inline-block;background:#0A1628;border:1px solid var(--border);border-radius:5px;padding:1px 8px;font-family:var(--font-mono);font-size:.85em;color:var(--accent-cyan);unicode-bidi:isolate}
+/* flow diagrams */
+.flow{direction:ltr;text-align:center;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;margin:16px 0}
+.flow-box{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:10px 18px;font-family:var(--font-mono);font-size:.82em;color:var(--text-primary);white-space:nowrap}
+.flow-arrow{color:var(--accent-cyan);font-size:22px;font-weight:700}
+.flow-box.green{border-color:var(--accent-green);color:var(--accent-green)}
+.flow-box.red{border-color:var(--accent-red);color:var(--accent-red)}
+.flow-box.cyan{border-color:var(--accent-cyan);color:var(--accent-cyan)}
+.flow-box.yellow{border-color:var(--accent-yellow);color:var(--accent-yellow)}
+/* comparison table */
+.cmp-table{width:100%;border-collapse:collapse;direction:rtl;margin:16px 0}
+.cmp-table th,.cmp-table td{border:1px solid var(--border);padding:12px 16px;text-align:right}
+.cmp-table th{background:rgba(0,191,255,.1);color:var(--accent-cyan);font-family:var(--font-heading)}
+.cmp-table td{background:var(--bg-card)}
+.cmp-table td[dir="ltr"]{text-align:center;font-family:var(--font-mono)}
+/* bullet lists */
+ul.heb{list-style:none;padding:0}
+ul.heb li{position:relative;padding-right:24px;margin-bottom:10px;color:var(--text-secondary)}
+ul.heb li::before{content:'◆';position:absolute;right:0;color:var(--accent-cyan);font-size:.7em;top:5px}
+/* section number */
+.layer-num{display:inline-block;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--accent-cyan),var(--accent-green));color:#000;font-family:var(--font-heading);font-weight:700;font-size:20px;text-align:center;line-height:44px;margin-left:12px;direction:ltr}
+/* title logo */
+.logo-img{width:clamp(80px,12vw,160px);margin-bottom:20px}
+.subtitle{color:var(--text-secondary);font-size:clamp(.85em,1.2vw,1.1em);margin-top:8px}
+.accent-text{color:var(--accent-cyan)}
+.red-text{color:var(--accent-red)}
+.green-text{color:var(--accent-green)}
+.yellow-text{color:var(--accent-yellow)}
+/* two-column */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:768px){.two-col{grid-template-columns:1fr}.flow{flex-direction:column}}
+/* links section */
+.link-card{display:block;direction:ltr;text-align:left;text-decoration:none;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 20px;margin:8px 0;color:var(--accent-cyan);font-family:var(--font-mono);font-size:.85em;transition:all .25s}
+.link-card:hover{border-color:var(--accent-cyan);background:rgba(0,191,255,.08)}
+/* nav links top */
+.top-nav{position:fixed;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:10px;z-index:100;direction:ltr}
+.top-nav a{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);text-decoration:none;padding:4px 12px;border:1px solid var(--border);border-radius:16px;transition:all .25s}
+.top-nav a:hover{color:var(--accent-cyan);border-color:var(--accent-cyan)}
+/* allow/reject cards */
+.perm-card{border-radius:12px;padding:14px 18px;margin:8px 0;display:flex;align-items:center;gap:12px}
+.perm-card .icon{font-size:24px;flex-shrink:0}
+.perm-card.allow{background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.3)}
+.perm-card.ask{background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.3)}
+.perm-card.reject{background:rgba(226,30,38,.08);border:1px solid rgba(226,30,38,.3)}
+.perm-card.delegate{background:rgba(0,191,255,.08);border:1px solid rgba(0,191,255,.3)}
+.perm-label{direction:ltr;font-family:var(--font-mono);font-weight:600;font-size:.9em}
+</style>
+</head>
+<body>
+
+<!-- Top nav links -->
+<div class="top-nav">
+<a href="https://eswlab.com/products/amp/amp/" target="_blank">ESW Lab</a>
+<a href="https://ampcode.com/manual" target="_blank">Manual</a>
+<a href="https://ampcode.com/security" target="_blank">Security</a>
+</div>
+
+<!-- Nav buttons -->
+<button class="nav-btn nav-prev hidden" id="prevBtn" aria-label="Previous">&#8249;</button>
+<button class="nav-btn nav-next" id="nextBtn" aria-label="Next">&#8250;</button>
+
+<!-- Progress bar -->
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<!-- Slide counter dots -->
+<div class="slide-counter" id="slideCounter"></div>
+
+<!-- Swipe hint -->
+<div class="swipe-hint" id="swipeHint">&#8592; החליקו לניווט &#8594;</div>
+
+<!-- ============ SLIDES ============ -->
+<div class="slides-wrapper" id="slidesWrapper">
+
+<!-- SLIDE 1 — Title -->
+<div class="slide">
+<div class="slide-content" style="text-align:center">
+<img src="amp-logo.png" alt="Amp Logo" class="logo-img">
+<h1 style="font-size:clamp(1.6em,3.5vw,2.6em);margin-bottom:12px">למה הבאג הזה לא יכול לקרות<br><span class="accent-text">ב־<bdi dir="ltr">Ampcode</bdi></span></h1>
+<p class="subtitle">באג קריטי נמצא ב־<bdi dir="ltr">Claude Code</bdi> — ניתוח למה הוא בלתי אפשרי ב־<bdi dir="ltr">Ampcode</bdi></p>
+<p style="color:var(--text-muted);margin-top:24px;font-size:.85em">שש שכבות הגנה שמונעות את המתקפה</p>
+</div>
+</div>
+
+<!-- SLIDE 2 — What happened -->
+<div class="slide">
+<div class="slide-content">
+<h2 style="font-size:clamp(1.3em,2.5vw,2em);margin-bottom:8px">🔴 מה בעצם קרה?</h2>
+<p style="color:var(--text-secondary);margin-bottom:20px">האירוע שהתרחש ב־<bdi dir="ltr">Claude Code</bdi></p>
+<div class="card card-accent">
+<h3 style="margin-bottom:12px">תיאור האירוע</h3>
+<ul class="heb">
+<li>משתמש התלונן על התנהגות חריגה — הוא עצמו לא ידע מה זה וחשד בכל מיני דברים אחרים, אבל כל עין מקצועית שהסתכלה על זה זיהתה מייד מתקפת הזרקת פרומפט עצמית</li>
+<li>כלי חיצוני החזיר תגובה שהכילה הוראות זדוניות</li>
+<li>הסוכן ביצע את ההוראות ללא אישור המשתמש</li>
+<li>קוד זדוני הופעל, סודות נחשפו, נתונים דלפו</li>
+</ul>
+</div>
+<div class="card" style="border-right:4px solid var(--accent-red)">
+<h3 style="margin-bottom:12px;color:var(--accent-red)">התוצאה</h3>
+<ul class="heb">
+<li>הסוכן הריץ פקודות ללא אישור</li>
+<li>מפתחות גישה נחשפו לגורם חיצוני</li>
+<li>המשתמש לא קיבל שום התראה</li>
+</ul>
+</div>
+</div>
+</div>
+
+<!-- SLIDE 3 — Root cause -->
+<div class="slide">
+<div class="slide-content">
+<h2 style="font-size:clamp(1.3em,2.5vw,2em);margin-bottom:24px">🔍 מה באמת גרם לזה?</h2>
+<div class="two-col">
+<div class="card" style="border-top:3px solid var(--accent-red)">
+<h3 style="color:var(--accent-red);margin-bottom:12px">תאוריה א׳ — תכנון לקוי</h3>
+<ul class="heb">
+<li>לא הייתה הפרדה בין תוכן לפקודות</li>
+<li>הסוכן סמך על כל פלט משרת חיצוני</li>
+<li>לא הייתה שכבת אימות ביניים</li>
+<li>הרשאות רחבות מדי ללא בקרה</li>
+</ul>
+</div>
+<div class="card" style="border-top:3px solid var(--accent-orange)">
+<h3 style="color:var(--accent-orange);margin-bottom:12px">תאוריה ב׳ — פער בשרשרת האמון</h3>
+<ul class="heb">
+<li>שרתים חיצוניים קיבלו אמון מלא</li>
+<li>לא הייתה מדיניות הרשאות לכל שרת</li>
+<li>תוכן חיצוני לא סומן ולא בודד</li>
+<li>לא היה מנגנון לחסימת פעולות רגישות</li>
+</ul>
+</div>
+</div>
+<div class="card" style="margin-top:16px;border-right:4px solid var(--accent-cyan)">
+<h3 style="color:var(--accent-cyan);margin-bottom:8px">המסקנה</h3>
+<p style="color:var(--text-secondary)">ארכיטקטורה שלא תוכננה עם הגנה מובנית בשכבות — חשופה למתקפות הזרקה. <bdi dir="ltr">Ampcode</bdi> תוכנן מראש להיות מוגן ממתקפות כאלה</p>
+</div>
+</div>
+</div>
+
+<!-- SLIDE 4 — Layer 1: MCP Trust -->
+<div class="slide">
+<div class="slide-content">
+<h2 style="margin-bottom:24px"><span class="layer-num">1</span> אמון שרתים במרחב העבודה</h2>
+<div class="card card-accent">
+<h3 style="margin-bottom:12px">איך זה עובד?</h3>
+<ul class="heb">
+<li>כל שרת חיצוני חייב רישום מפורש בקובץ הגדרות</li>
+<li>שרתים לא מוכרים נחסמים אוטומטית</li>
+<li>המשתמש מאשר כל שרת חדש באופן ידני</li>
+<li>אין גישה אוטומטית לשרתים ללא הרשמה</li>
+</ul>
+</div>
+<p style="margin:16px 0;color:var(--text-secondary)">דוגמה לרישום שרת:</p>
+<div class="code-block">{
+  "mcpServers": {
+    "my-server": {
+      "command": "npx",
+      "args": ["-y", "@my/mcp-server"],
+      "trust": "workspace"
+    }
+  }
+}</div>
+<div class="flow">
+<div class="flow-box">MCP Server Request</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box yellow">Config Check</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box green">Registered? Allow</div>
+<div class="flow-arrow">/</div>
+<div class="flow-box red">Unknown? Block</div>
+</div>
+</div>
+</div>
+
+<!-- SLIDE 5 — Layer 2: Granular Permissions -->
+<div class="slide">
+<div class="slide-content">
+<h2 style="margin-bottom:24px"><span class="layer-num">2</span> מערכת הרשאות גרנולרית</h2>
+<div class="card card-accent">
+<h3 style="margin-bottom:12px">ארבע רמות שליטה</h3>
+<p style="color:var(--text-secondary);margin-bottom:16px">כל פעולה שהסוכן מנסה לבצע עוברת סיווג לפי רמת סיכון</p>
+</div>
+<div class="perm-card allow">
+<div class="icon">✅</div>
+<div><span class="perm-label green-text">allow</span><br><span style="color:var(--text-secondary)">פעולות בטוחות — קריאת קבצים, חיפוש</span></div>
+</div>
+<div class="perm-card ask">
+<div class="icon">❓</div>
+<div><span class="perm-label yellow-text">ask</span><br><span style="color:var(--text-secondary)">פעולות בינוניות — דורשות אישור מהמשתמש</span></div>
+</div>
+<div class="perm-card reject">
+<div class="icon">🚫</div>
+<div><span class="perm-label red-text">reject</span><br><span style="color:var(--text-secondary)">פעולות מסוכנות — נחסמות אוטומטית</span></div>
+</div>
+<div class="perm-card delegate">
+<div class="icon">🔀</div>
+<div><span class="perm-label accent-text">delegate</span><br><span style="color:var(--text-secondary)">העברה לגורם מאשר חיצוני</span></div>
+</div>
+<p style="color:var(--text-muted);margin-top:12px;font-size:.85em">המתקפה שנחשפה הייתה נחסמת כבר בשכבה הזו — הסוכן לא יכול להריץ פקודות בלי אישור</p>
+</div>
+</div>
+
+<!-- SLIDE 6 — Layer 3: MCP Permissions -->
+<div class="slide">
+<div class="slide-content">
+<h2 style="margin-bottom:24px"><span class="layer-num">3</span> הרשאות ברמת שרת</h2>
+<div class="card card-accent">
+<h3 style="margin-bottom:12px">בקרה פרטנית לכל שרת</h3>
+<ul class="heb">
+<li>כל שרת חיצוני מקבל סט הרשאות נפרד</li>
+<li>ניתן לחסום כלים ספציפיים בתוך שרת</li>
+<li>הגדרות נשמרות בקובץ הגדרות מקומי</li>
+</ul>
+</div>
+<p style="margin:12px 0;color:var(--text-secondary)">דוגמת הגדרות:</p>
+<div class="code-block">{
+  "mcpServers": {
+    "filesystem": {
+      "permissions": {
+        "read_file":  "allow",
+        "write_file": "ask",
+        "delete_file": "reject",
+        "execute":    "reject"
+      }
+    }
+  }
+}</div>
+<div class="card" style="margin-top:16px;border-right:4px solid var(--accent-green)">
+<p style="color:var(--text-secondary)">גם אם שרת חיצוני ינסה להחזיר הוראה זדונית — הפעולה תיחסם אם אינה מורשית</p>
+</div>
+</div>
+</div>
+
+<!-- SLIDE 7 — Layer 4: Secret Redaction -->
+<div class="slide">
+<div class="slide-content">
+<h2 style="margin-bottom:24px"><span class="layer-num">4</span> מחיקת סודות אוטומטית</h2>
+<div class="card card-accent">
+<h3 style="margin-bottom:12px">איך זה עובד?</h3>
+<ul class="heb">
+<li>כל פלט נסרק אוטומטית לזיהוי סודות</li>
+<li>מפתחות, אסימונים וסיסמאות מוחלפים בתגית</li>
+<li>הסודות לא מגיעים למודל השפה בשום שלב</li>
+<li>גם פלט משרתים חיצוניים עובר סינון</li>
+</ul>
+</div>
+<p style="margin:16px 0;color:var(--text-secondary)">תרשים הזרימה:</p>
+<div class="flow">
+<div class="flow-box">Tool Output</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box cyan">Secret Scanner</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box yellow">API_KEY=sk-1234...</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box green">&#91;REDAC&#84;ED:amp&#93;</div>
+</div>
+<div class="card" style="margin-top:16px;border-right:4px solid var(--accent-green)">
+<h3 style="color:var(--accent-green);margin-bottom:8px">התוצאה</h3>
+<p style="color:var(--text-secondary)">גם אם מתקפת הזרקה מצליחה לעבור שכבות קודמות — הסודות כבר לא קיימים בהקשר</p>
+</div>
+</div>
+</div>
+
+<!-- SLIDE 8 — Layer 5: Client-Server Architecture -->
+<div class="slide">
+<div class="slide-content">
+<h2 style="margin-bottom:24px"><span class="layer-num">5</span> ארכיטקטורת לקוח-שרת</h2>
+<div class="card card-accent">
+<h3 style="margin-bottom:12px">הפרדה מובנית</h3>
+<ul class="heb">
+<li>הלקוח רץ על המחשב המקומי</li>
+<li>מודל השפה רץ בענן בסביבה מבודדת</li>
+<li>הלקוח מפקח על כל פעולה לפני ביצוע</li>
+<li>מנגנון ההרשאות נמצא בצד הלקוח — לא ניתן לעקיפה מהענן</li>
+</ul>
+</div>
+<p style="margin:12px 0;color:var(--text-secondary)">השוואת ארכיטקטורות:</p>
+<div class="two-col">
+<div class="card" style="border-top:3px solid var(--accent-red)">
+<h4 style="color:var(--accent-red);margin-bottom:8px"><bdi dir="ltr">Claude Code</bdi></h4>
+<div class="flow" style="flex-direction:column">
+<div class="flow-box">MCP Server</div>
+<div class="flow-arrow" style="transform:rotate(90deg)">→</div>
+<div class="flow-box red">Agent (no filter)</div>
+<div class="flow-arrow" style="transform:rotate(90deg)">→</div>
+<div class="flow-box red">Execute directly</div>
+</div>
+</div>
+<div class="card" style="border-top:3px solid var(--accent-green)">
+<h4 style="color:var(--accent-green);margin-bottom:8px"><bdi dir="ltr">Ampcode</bdi></h4>
+<div class="flow" style="flex-direction:column">
+<div class="flow-box">MCP Server</div>
+<div class="flow-arrow" style="transform:rotate(90deg)">→</div>
+<div class="flow-box cyan">Cloud LLM (isolated)</div>
+<div class="flow-arrow" style="transform:rotate(90deg)">→</div>
+<div class="flow-box yellow">Local Client (permissions)</div>
+<div class="flow-arrow" style="transform:rotate(90deg)">→</div>
+<div class="flow-box green">User approves</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- SLIDE 9 — Layer 6: Skills & Audits -->
+<div class="slide">
+<div class="slide-content">
+<h2 style="margin-bottom:24px"><span class="layer-num">6</span> טעינה מבוקרת + ביקורות אבטחה</h2>
+<div class="two-col">
+<div class="card" style="border-top:3px solid var(--accent-cyan)">
+<h3 style="color:var(--accent-cyan);margin-bottom:12px">טעינה מבוקרת</h3>
+<ul class="heb">
+<li>כישורים נטענים רק מתיקיות מורשות</li>
+<li>קובץ הגדרות מגדיר מה מותר</li>
+<li>לא ניתן להזריק כישורים מתוכן חיצוני</li>
+<li>כל טעינה מתועדת בלוג</li>
+</ul>
+</div>
+<div class="card" style="border-top:3px solid var(--accent-yellow)">
+<h3 style="color:var(--accent-yellow);margin-bottom:12px">ביקורות אבטחה</h3>
+<ul class="heb">
+<li>בדיקות חדירה שוטפות</li>
+<li>עמידה בתקני אבטחה בינלאומיים</li>
+<li>תוכנית גילוי אחראי של חולשות</li>
+</ul>
+<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px">
+<span class="badge badge-green">SOC 2</span>
+<span class="badge badge-cyan">ISO 27001</span>
+<span class="badge badge-yellow">GDPR</span>
+</div>
+</div>
+</div>
+<div class="card" style="margin-top:16px;border-right:4px solid var(--accent-green)">
+<p style="color:var(--text-secondary)">שילוב של בקרות טכניות וארגוניות יוצר הגנה מקיפה שלא ניתן לעקוף בפקודה אחת</p>
+</div>
+</div>
+</div>
+
+<!-- SLIDE 10 — Comparison Table -->
+<div class="slide">
+<div class="slide-content">
+<h2 style="font-size:clamp(1.3em,2.5vw,2em);margin-bottom:24px">📊 השוואה מסכמת</h2>
+<div style="overflow-x:auto">
+<table class="cmp-table">
+<thead>
+<tr>
+<th>שכבת הגנה</th>
+<th style="color:var(--accent-red)"><bdi dir="ltr">Claude Code</bdi></th>
+<th style="color:var(--accent-green)"><bdi dir="ltr">Ampcode</bdi></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>רישום שרתים חיצוניים</td>
+<td>❌ אמון אוטומטי</td>
+<td>✅ רישום מפורש בלבד</td>
+</tr>
+<tr>
+<td>הרשאות לפעולות</td>
+<td>❌ אין בקרה</td>
+<td>✅ ארבע רמות בקרה</td>
+</tr>
+<tr>
+<td>הרשאות לכל שרת</td>
+<td>❌ גישה מלאה</td>
+<td>✅ הרשאות פרטניות</td>
+</tr>
+<tr>
+<td>הגנה על סודות</td>
+<td>❌ סודות חשופים</td>
+<td>✅ מחיקה אוטומטית</td>
+</tr>
+<tr>
+<td>ארכיטקטורה</td>
+<td>❌ ריצה מקומית ישירה</td>
+<td>✅ הפרדת לקוח-שרת</td>
+</tr>
+<tr>
+<td>ביקורות אבטחה</td>
+<td>❌ לא ידוע</td>
+<td>✅ תקנים בינלאומיים</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+<!-- SLIDE 11 — Conclusion -->
+<div class="slide">
+<div class="slide-content" style="text-align:center">
+<h2 style="font-size:clamp(1.3em,3vw,2.2em);margin-bottom:24px">🛡️ שורה תחתונה</h2>
+<div class="card card-accent" style="text-align:right">
+<h3 style="margin-bottom:16px;color:var(--accent-green)">מסקנות עיקריות והיתרונות המובנים של <bdi dir="ltr">Ampcode</bdi></h3>
+<ul class="heb">
+<li>אבטחה מובנית בארכיטקטורה — לא טלאי שנוסף בדיעבד</li>
+<li>שש שכבות הגנה עצמאיות — כשלון של אחת לא פוגע באחרות</li>
+<li>מערכת ההרשאות שומרת על המשתמש בשליטה מלאה</li>
+<li>סודות מוגנים באופן אוטומטי — גם מפני הסוכן עצמו</li>
+<li>ארכיטקטורת לקוח-שרת מונעת עקיפה של בקרות</li>
+</ul>
+</div>
+<p style="color:var(--text-secondary);margin:20px 0">קישורים למידע נוסף:</p>
+<a class="link-card" href="https://eswlab.com/products/amp/amp/" target="_blank">eswlab.com/products/amp/amp/</a>
+<a class="link-card" href="https://ampcode.com/manual" target="_blank">ampcode.com/manual</a>
+<a class="link-card" href="https://ampcode.com/security" target="_blank">ampcode.com/security</a>
+<p style="color:var(--text-muted);margin-top:24px;font-size:.8em"><bdi dir="ltr">Engineering Software Lab — AI SDLC Tools</bdi></p>
+</div>
+</div>
+
+</div><!-- /slides-wrapper -->
+
+<script>
+(function(){
+const wrapper=document.getElementById('slidesWrapper');
+const total=wrapper.children.length;
+let cur=0;
+const prevBtn=document.getElementById('prevBtn');
+const nextBtn=document.getElementById('nextBtn');
+const progressFill=document.getElementById('progressFill');
+const counter=document.getElementById('slideCounter');
+const hint=document.getElementById('swipeHint');
+let hintVisible=true;
+
+// build dots
+for(let i=0;i<total;i++){
+const d=document.createElement('div');
+d.className='dot'+(i===0?' active':'');
+d.addEventListener('click',()=>goTo(i));
+counter.appendChild(d);
+}
+
+function goTo(n){
+if(n<0||n>=total)return;
+cur=n;
+wrapper.style.transform='translateX(-'+cur*100+'vw)';
+prevBtn.classList.toggle('hidden',cur===0);
+nextBtn.classList.toggle('hidden',cur===total-1);
+progressFill.style.width=((cur+1)/total*100)+'%';
+const dots=counter.querySelectorAll('.dot');
+dots.forEach((d,i)=>d.classList.toggle('active',i===cur));
+if(hintVisible){hint.classList.add('gone');hintVisible=false;}
+}
+
+prevBtn.addEventListener('click',()=>goTo(cur-1));
+nextBtn.addEventListener('click',()=>goTo(cur+1));
+
+// keyboard
+document.addEventListener('keydown',e=>{
+if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();goTo(cur+1);}
+if(e.key==='ArrowLeft'){e.preventDefault();goTo(cur-1);}
+});
+
+// touch swipe
+let tx=0,ty=0;
+document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchend',e=>{
+const dx=e.changedTouches[0].clientX-tx;
+const dy=e.changedTouches[0].clientY-ty;
+if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)){
+if(dx<0)goTo(cur+1);else goTo(cur-1);
+}
+});
+
+// mouse drag
+let mx=0,dragging=false;
+document.addEventListener('mousedown',e=>{mx=e.clientX;dragging=true;});
+document.addEventListener('mouseup',e=>{
+if(!dragging)return;dragging=false;
+const dx=e.clientX-mx;
+if(Math.abs(dx)>50){if(dx<0)goTo(cur+1);else goTo(cur-1);}
+});
+
+// init
+goTo(0);
+prevBtn.classList.add('hidden');
+})();
+</script>
+</body>
+</html>
