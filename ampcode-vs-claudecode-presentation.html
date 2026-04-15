@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ampcode vs Claude Code — Why Ampcode Wins</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  :root {
+    --amp-blue: #0066FF;
+    --amp-dark: #0A0E1A;
+    --amp-gradient: linear-gradient(135deg, #0066FF 0%, #00D4FF 100%);
+    --claude-orange: #D97706;
+    --win-green: #10B981;
+    --lose-red: #EF4444;
+    --card-bg: rgba(255,255,255,0.05);
+  }
+  
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--amp-dark);
+    color: #E2E8F0;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+  
+  .slide {
+    display: none;
+    width: 100vw;
+    height: 100vh;
+    padding: 60px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .slide.active { display: flex; flex-direction: column; }
+  
+  .slide::before {
+    content: '';
+    position: absolute;
+    top: -200px; right: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,102,255,0.08) 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: 0;
+  }
+  
+  .slide > * { position: relative; z-index: 1; }
+  
+  h1 {
+    font-size: 3.2rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+  
+  h1 .gradient {
+    background: var(--amp-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  h2 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 30px;
+    color: #F1F5F9;
+  }
+  
+  h2 .gradient {
+    background: var(--amp-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .subtitle {
+    font-size: 1.3rem;
+    color: #94A3B8;
+    margin-bottom: 40px;
+    font-weight: 400;
+  }
+  
+  .tag {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+  }
+  
+  .tag.blue { background: rgba(0,102,255,0.15); color: #60A5FA; border: 1px solid rgba(0,102,255,0.3); }
+  .tag.green { background: rgba(16,185,129,0.15); color: #34D399; border: 1px solid rgba(16,185,129,0.3); }
+  .tag.orange { background: rgba(217,119,6,0.15); color: #FBBF24; border: 1px solid rgba(217,119,6,0.3); }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    margin-top: 10px;
+  }
+  
+  th {
+    text-align: left;
+    padding: 12px 16px;
+    background: rgba(0,102,255,0.12);
+    border-bottom: 2px solid rgba(0,102,255,0.3);
+    font-weight: 600;
+    color: #93C5FD;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  td {
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    vertical-align: top;
+  }
+  
+  tr:hover { background: rgba(255,255,255,0.03); }
+  
+  .win { color: #34D399; font-weight: 700; }
+  .lose { color: #94A3B8; }
+  .tie { color: #FBBF24; font-weight: 600; }
+  
+  .grid { display: grid; gap: 24px; flex: 1; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  
+  .card {
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 28px;
+    backdrop-filter: blur(10px);
+  }
+  
+  .card h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #F1F5F9;
+  }
+  
+  .card p, .card li {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: #CBD5E1;
+  }
+  
+  .card ul { padding-left: 18px; }
+  .card li { margin-bottom: 6px; }
+  
+  .big-number {
+    font-size: 3.5rem;
+    font-weight: 900;
+    background: var(--amp-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  
+  .big-number.orange {
+    background: linear-gradient(135deg, #D97706, #F59E0B);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .big-number.green {
+    background: linear-gradient(135deg, #059669, #34D399);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .big-number.red {
+    background: linear-gradient(135deg, #DC2626, #EF4444);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .stat-label {
+    font-size: 0.85rem;
+    color: #94A3B8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 500;
+  }
+  
+  .bar-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 8px 0;
+  }
+  
+  .bar-label {
+    font-size: 0.85rem;
+    width: 100px;
+    text-align: right;
+    font-weight: 500;
+  }
+  
+  .bar-track {
+    flex: 1;
+    height: 32px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .bar-fill {
+    height: 100%;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    padding-left: 12px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: white;
+    transition: width 1s ease;
+  }
+  
+  .bar-fill.amp { background: linear-gradient(90deg, #0066FF, #00D4FF); }
+  .bar-fill.claude { background: linear-gradient(90deg, #92400E, #D97706); }
+  
+  .quote {
+    font-style: italic;
+    font-size: 1.15rem;
+    line-height: 1.7;
+    color: #CBD5E1;
+    border-left: 3px solid var(--amp-blue);
+    padding: 16px 24px;
+    background: rgba(0,102,255,0.05);
+    border-radius: 0 12px 12px 0;
+    margin: 12px 0;
+  }
+  
+  .quote .source {
+    display: block;
+    margin-top: 10px;
+    font-style: normal;
+    font-size: 0.85rem;
+    color: #64748B;
+    font-weight: 600;
+  }
+  
+  .verdict {
+    text-align: center;
+    padding: 30px;
+    background: linear-gradient(135deg, rgba(0,102,255,0.1), rgba(0,212,255,0.05));
+    border: 1px solid rgba(0,102,255,0.2);
+    border-radius: 20px;
+    margin-top: 20px;
+  }
+  
+  .verdict h3 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  
+  /* Nav */
+  .nav {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    z-index: 100;
+    background: rgba(10,14,26,0.9);
+    padding: 10px 24px;
+    border-radius: 40px;
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(20px);
+  }
+  
+  .nav button {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #E2E8F0;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  
+  .nav button:hover {
+    background: var(--amp-blue);
+    border-color: var(--amp-blue);
+  }
+  
+  .slide-counter {
+    font-size: 0.85rem;
+    color: #64748B;
+    min-width: 60px;
+    text-align: center;
+  }
+  
+  .progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    background: var(--amp-gradient);
+    transition: width 0.3s;
+    z-index: 100;
+  }
+  
+  .flex-center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    flex: 1;
+  }
+  
+  .icon-row {
+    display: flex;
+    gap: 40px;
+    margin: 30px 0;
+    justify-content: center;
+  }
+  
+  .icon-item {
+    text-align: center;
+  }
+  
+  .icon-item .emoji {
+    font-size: 2.5rem;
+    margin-bottom: 8px;
+  }
+  
+  .icon-item .label {
+    font-size: 0.85rem;
+    color: #94A3B8;
+    font-weight: 500;
+  }
+  
+  .vs {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    justify-content: center;
+    margin: 30px 0;
+  }
+  
+  .vs-item {
+    text-align: center;
+    padding: 30px 50px;
+    border-radius: 20px;
+  }
+  
+  .vs-item.amp-side {
+    background: rgba(0,102,255,0.1);
+    border: 2px solid rgba(0,102,255,0.3);
+  }
+  
+  .vs-item.claude-side {
+    background: rgba(217,119,6,0.1);
+    border: 2px solid rgba(217,119,6,0.3);
+  }
+  
+  .vs-divider {
+    font-size: 2rem;
+    font-weight: 900;
+    color: #475569;
+  }
+  
+  .vs-item .name {
+    font-size: 1.5rem;
+    font-weight: 800;
+  }
+  
+  .vs-item .desc {
+    font-size: 0.9rem;
+    color: #94A3B8;
+    margin-top: 4px;
+  }
+  
+  .highlight-box {
+    background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(16,185,129,0.02));
+    border: 1px solid rgba(16,185,129,0.25);
+    border-radius: 16px;
+    padding: 20px 28px;
+    margin: 16px 0;
+  }
+  
+  .danger-box {
+    background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(239,68,68,0.02));
+    border: 1px solid rgba(239,68,68,0.25);
+    border-radius: 16px;
+    padding: 16px 24px;
+    margin: 12px 0;
+    font-size: 0.9rem;
+    color: #FCA5A5;
+  }
+  
+  .small { font-size: 0.78rem; color: #64748B; margin-top: 12px; }
+  
+  .section-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,102,255,0.3), transparent);
+    margin: 20px 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress"></div>
+
+<!-- SLIDE 1: TITLE -->
+<div class="slide active" id="slide-1">
+  <div class="flex-center">
+    <span class="tag blue">Technical Procurement Evaluation — 2026</span>
+    <h1 style="font-size:3.8rem; margin-bottom: 16px;">
+      Why <span class="gradient">Ampcode</span> Beats<br>Claude Code
+    </h1>
+    <p class="subtitle" style="max-width:700px;">
+      Evidence-based comparison across real engineering benchmarks, 
+      SWE tasks, SIMD optimization, and enterprise procurement criteria.
+    </p>
+    <div class="icon-row">
+      <div class="icon-item"><div class="emoji">⚡</div><div class="label">Faster</div></div>
+      <div class="icon-item"><div class="emoji">🎯</div><div class="label">More Repeatable</div></div>
+      <div class="icon-item"><div class="emoji">🧠</div><div class="label">Multi-Model</div></div>
+      <div class="icon-item"><div class="emoji">👥</div><div class="label">Team-First</div></div>
+      <div class="icon-item"><div class="emoji">💰</div><div class="label">Cost Effective</div></div>
+    </div>
+    <p class="small">Daniel Liezrowice · ESL · Based on controlled benchmarks & community evidence</p>
+  </div>
+</div>
+
+<!-- SLIDE 2: THE CONTENDERS -->
+<div class="slide" id="slide-2">
+  <span class="tag blue">Overview</span>
+  <h2>The Contenders</h2>
+  <div class="vs">
+    <div class="vs-item amp-side">
+      <div class="name" style="color:#60A5FA;">⚡ Ampcode</div>
+      <div class="desc">By Sourcegraph</div>
+    </div>
+    <div class="vs-divider">VS</div>
+    <div class="vs-item claude-side">
+      <div class="name" style="color:#FBBF24;">🟠 Claude Code</div>
+      <div class="desc">By Anthropic</div>
+    </div>
+  </div>
+  <div class="grid grid-2" style="margin-top:20px;">
+    <div class="card">
+      <h3 style="color:#60A5FA;">Ampcode Advantages</h3>
+      <ul>
+        <li><strong>Multi-Model:</strong> Opus 4.6, GPT-5.4 oracle, Gemini — best model per task</li>
+        <li><strong>Sub-agents:</strong> Parallel task execution out of the box</li>
+        <li><strong>Threads:</strong> Shareable, searchable conversation history</li>
+        <li><strong>Oracle:</strong> GPT-5.4 "second opinion" for complex reasoning</li>
+        <li><strong>Librarian:</strong> Cross-repo code understanding</li>
+        <li><strong>3 Modes:</strong> Smart / Rush / Deep for any task type</li>
+        <li><strong>Skills:</strong> Extensible with custom skills & toolboxes</li>
+        <li><strong>AGENTS.md:</strong> Hierarchical, directory-scoped guidance</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="color:#FBBF24;">Claude Code Characteristics</h3>
+      <ul>
+        <li><strong>Anthropic-only models:</strong> Opus/Sonnet/Haiku — no cross-provider routing (no GPT, Gemini)</li>
+        <li><strong>Sub-agents:</strong> Built-in (Explore, Plan) + custom agents — but no cross-provider oracle</li>
+        <li><strong>Session sharing:</strong> Remote Control & Channels exist, but no team-wide searchable thread history</li>
+        <li><strong>No Oracle:</strong> No second-opinion model from a different AI provider</li>
+        <li><strong>No Librarian:</strong> No built-in cross-repo code intelligence</li>
+        <li><strong>Auto Mode:</strong> Conservative/Balanced/Aggressive profiles (not task-type modes)</li>
+        <li><strong>CLAUDE.md:</strong> Hierarchical + auto memory, but less granular than AGENTS.md scoping</li>
+        <li><strong>Broader patch coverage</strong> in single-run scenarios</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: BENCHMARK 1 — KUBERNETES -->
+<div class="slide" id="slide-3">
+  <span class="tag green">Benchmark #1</span>
+  <h2>Kubernetes v1.34.5 — Real Engineering Task</h2>
+  <p class="subtitle" style="margin-bottom:20px;">Add <code>allocationTraceID</code> to DRA lifecycle across 27,579 files. Zero human intervention. Zero coaching.</p>
+  <div class="grid grid-4">
+    <div class="card" style="text-align:center;">
+      <div class="big-number green">9.08</div>
+      <div class="stat-label">Ampcode Procurement</div>
+      <div style="margin-top:8px; font-size:0.85rem; color:#34D399;">▲ Winner</div>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div class="big-number orange">8.45</div>
+      <div class="stat-label">Claude Procurement</div>
+      <div style="margin-top:8px; font-size:0.85rem; color:#94A3B8;">0.63 pts behind</div>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div class="big-number green">9.9</div>
+      <div class="stat-label">Amp Repeatability</div>
+      <div style="margin-top:8px; font-size:0.85rem; color:#34D399;">3 true cold starts</div>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div class="big-number red">6.8</div>
+      <div class="stat-label">Claude Repeatability</div>
+      <div style="margin-top:8px; font-size:0.85rem; color:#FCA5A5;">Only 1 true cold start</div>
+    </div>
+  </div>
+  <table style="margin-top:20px;">
+    <tr><th>Metric</th><th>Ampcode</th><th>Claude Code</th><th>Winner</th></tr>
+    <tr><td>Engineering Score</td><td>8.85</td><td>8.84</td><td class="tie">≈ Tie</td></tr>
+    <tr><td>Procurement Score</td><td class="win">9.08</td><td>8.45</td><td class="win">Ampcode ▲</td></tr>
+    <tr><td>Cold-Start Time</td><td class="win">1.0–1.6 min</td><td>64 min</td><td class="win">Ampcode (40× faster)</td></tr>
+    <tr><td>Repeatability</td><td class="win">9.9/10</td><td>6.8/10</td><td class="win">Ampcode ▲</td></tr>
+    <tr><td>Autonomy</td><td>10/10</td><td>10/10</td><td class="tie">Tie</td></tr>
+    <tr><td>Patch Size</td><td>6 files (+31 lines)</td><td>14 files (+80 lines)</td><td class="tie">Trade-off</td></tr>
+  </table>
+  <p class="small">Source: <a href="https://github.com/zuwasi/Compare-Ampcode-Vs-Claudecode-on-a-real-Kubernetes-engineering-task" style="color:#60A5FA;">github.com/zuwasi/Compare-Ampcode-Vs-Claudecode-on-a-real-Kubernetes-engineering-task</a> · GPT-5.4 as independent judge</p>
+</div>
+
+<!-- SLIDE 4: K8S DETAILED SCORES -->
+<div class="slide" id="slide-4">
+  <span class="tag green">Benchmark #1 — Detail</span>
+  <h2>Kubernetes: Category-by-Category Scoring</h2>
+  <p class="subtitle" style="margin-bottom:15px;">Management & Procurement Weighted Model (real-world decision criteria)</p>
+  
+  <div style="display:flex; gap:30px; margin-bottom: 16px;">
+    <div style="display:flex; align-items:center; gap:8px;"><div style="width:14px;height:14px;background:linear-gradient(90deg,#0066FF,#00D4FF);border-radius:3px;"></div><span style="font-size:0.85rem;">Ampcode</span></div>
+    <div style="display:flex; align-items:center; gap:8px;"><div style="width:14px;height:14px;background:linear-gradient(90deg,#92400E,#D97706);border-radius:3px;"></div><span style="font-size:0.85rem;">Claude Code</span></div>
+  </div>
+  
+  <div class="bar-container"><div class="bar-label">Repeatability<br><span style="font-size:0.7rem;color:#64748B;">15%</span></div><div class="bar-track"><div class="bar-fill amp" style="width:99%;">9.9</div></div></div>
+  <div class="bar-container"><div class="bar-label"></div><div class="bar-track"><div class="bar-fill claude" style="width:68%;">6.8</div></div></div>
+  
+  <div class="bar-container"><div class="bar-label">Time Efficiency<br><span style="font-size:0.7rem;color:#64748B;">12%</span></div><div class="bar-track"><div class="bar-fill amp" style="width:98%;">9.8</div></div></div>
+  <div class="bar-container"><div class="bar-label"></div><div class="bar-track"><div class="bar-fill claude" style="width:68%;">6.8</div></div></div>
+  
+  <div class="bar-container"><div class="bar-label">Autonomy<br><span style="font-size:0.7rem;color:#64748B;">10%</span></div><div class="bar-track"><div class="bar-fill amp" style="width:100%;">10.0</div></div></div>
+  <div class="bar-container"><div class="bar-label"></div><div class="bar-track"><div class="bar-fill claude" style="width:100%;">10.0</div></div></div>
+  
+  <div class="bar-container"><div class="bar-label">Cost Efficiency<br><span style="font-size:0.7rem;color:#64748B;">15%</span></div><div class="bar-track"><div class="bar-fill amp" style="width:90%;">9.0</div></div></div>
+  <div class="bar-container"><div class="bar-label"></div><div class="bar-track"><div class="bar-fill claude" style="width:78%;">7.8</div></div></div>
+  
+  <div class="bar-container"><div class="bar-label">Technical<br><span style="font-size:0.7rem;color:#64748B;">18%</span></div><div class="bar-track"><div class="bar-fill amp" style="width:81%;">8.1</div></div></div>
+  <div class="bar-container"><div class="bar-label"></div><div class="bar-track"><div class="bar-fill claude" style="width:93%;">9.3</div></div></div>
+  
+  <div class="verdict" style="margin-top:16px;">
+    <h3><span class="gradient">Ampcode 9.08</span> vs Claude Code 8.45</h3>
+    <p style="color:#94A3B8;">Ampcode wins the procurement-weighted model by <strong style="color:#34D399;">+0.63 points</strong></p>
+  </div>
+</div>
+
+<!-- SLIDE 5: BENCHMARK 2 — QUICKSWE -->
+<div class="slide" id="slide-5">
+  <span class="tag green">Benchmark #2</span>
+  <h2>QuickSWE v2 — 100-Task Multi-Language Benchmark</h2>
+  <p class="subtitle" style="margin-bottom:20px;">50 Python · 25 C++ · 25 CUDA — From easy to extreme (compilers, VMs, GCs, lock-free structures)</p>
+  <div style="display:grid; grid-template-columns:1fr 1.2fr; gap:24px; flex:1;">
+    <div style="display:flex; flex-direction:column; gap:20px;">
+      <div class="card" style="flex:1;">
+        <h3>🧪 Benchmark Design</h3>
+        <ul>
+          <li><strong>100 stress-test tasks</strong> across Python, C++, and CUDA</li>
+          <li><strong>4 difficulty tiers:</strong> 🟢 Easy · 🟡 Medium · 🟠 Hard · 🔴 Extreme</li>
+          <li><strong>Real pytest execution</strong> — no LLM-as-judge, tests pass or fail</li>
+          <li><strong>Statistical multi-run</strong> — N runs with aggregation</li>
+          <li><strong>Regression detection</strong> — pass-to-pass must still pass</li>
+        </ul>
+      </div>
+      <div class="card" style="flex:1;">
+        <h3>📊 Amp Deep³ vs Claude Code</h3>
+        <ul>
+          <li>Head-to-head using Amp's <strong>maximum reasoning mode</strong> (<code>xhigh</code>)</li>
+          <li>Identical task prompts, identical environment</li>
+          <li>Per-language and per-difficulty breakdown</li>
+        </ul>
+        <div class="highlight-box" style="margin-top:12px;">
+          <p style="font-size:0.85rem;"><strong>Extreme:</strong> Compiler lexer, bytecode VM, GC, Raft consensus, type inference, CUDA dynamic parallelism</p>
+        </div>
+      </div>
+    </div>
+    <a href="https://zuwasi.github.io/quickswe-dashboard/" target="_blank" style="text-decoration:none; display:block;">
+      <div class="card" style="height:100%; padding:0; overflow:hidden; border-color:rgba(0,102,255,0.4); position:relative; cursor:pointer; transition: border-color 0.3s, transform 0.2s;">
+        <div style="position:absolute; top:0; left:0; right:0; bottom:0; background: linear-gradient(135deg, #0f172a 0%, #1e293b 30%, #0f172a 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px;">
+          <div style="width:100%; max-width:420px; background:#0A0E1A; border-radius:12px; border:1px solid rgba(255,255,255,0.1); padding:20px; margin-bottom:16px;">
+            <div style="display:flex; gap:6px; margin-bottom:14px;">
+              <div style="width:10px;height:10px;border-radius:50%;background:#EF4444;"></div>
+              <div style="width:10px;height:10px;border-radius:50%;background:#FBBF24;"></div>
+              <div style="width:10px;height:10px;border-radius:50%;background:#22C55E;"></div>
+            </div>
+            <div style="font-size:0.7rem; color:#64748B; margin-bottom:12px; font-family:monospace;">quickswe-dashboard — Amp Deep³ vs Claude Code</div>
+            <div style="display:flex; gap:12px; align-items:flex-end; height:100px; margin-bottom:14px; padding:0 10px;">
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;">
+                <div style="font-size:0.65rem; color:#34D399; font-weight:700;">92%</div>
+                <div style="width:100%; background:linear-gradient(180deg,#0066FF,#00D4FF); border-radius:4px 4px 0 0; height:85px;"></div>
+                <div style="font-size:0.6rem; color:#94A3B8;">Py</div>
+              </div>
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;">
+                <div style="font-size:0.65rem; color:#FBBF24;">78%</div>
+                <div style="width:100%; background:linear-gradient(180deg,#92400E,#D97706); border-radius:4px 4px 0 0; height:70px;"></div>
+                <div style="font-size:0.6rem; color:#94A3B8;">Py</div>
+              </div>
+              <div style="width:1px; height:90px; background:rgba(255,255,255,0.1);"></div>
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;">
+                <div style="font-size:0.65rem; color:#34D399; font-weight:700;">88%</div>
+                <div style="width:100%; background:linear-gradient(180deg,#0066FF,#00D4FF); border-radius:4px 4px 0 0; height:78px;"></div>
+                <div style="font-size:0.6rem; color:#94A3B8;">C++</div>
+              </div>
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;">
+                <div style="font-size:0.65rem; color:#FBBF24;">72%</div>
+                <div style="width:100%; background:linear-gradient(180deg,#92400E,#D97706); border-radius:4px 4px 0 0; height:62px;"></div>
+                <div style="font-size:0.6rem; color:#94A3B8;">C++</div>
+              </div>
+              <div style="width:1px; height:90px; background:rgba(255,255,255,0.1);"></div>
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;">
+                <div style="font-size:0.65rem; color:#34D399; font-weight:700;">76%</div>
+                <div style="width:100%; background:linear-gradient(180deg,#0066FF,#00D4FF); border-radius:4px 4px 0 0; height:65px;"></div>
+                <div style="font-size:0.6rem; color:#94A3B8;">CUDA</div>
+              </div>
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;">
+                <div style="font-size:0.65rem; color:#FBBF24;">60%</div>
+                <div style="width:100%; background:linear-gradient(180deg,#92400E,#D97706); border-radius:4px 4px 0 0; height:50px;"></div>
+                <div style="font-size:0.6rem; color:#94A3B8;">CUDA</div>
+              </div>
+            </div>
+            <div style="display:flex; gap:16px; justify-content:center; font-size:0.7rem;">
+              <span style="color:#60A5FA;">■ Amp Deep³</span>
+              <span style="color:#D97706;">■ Claude Code</span>
+            </div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:1.3rem; font-weight:700; color:#60A5FA; margin-bottom:6px;">📊 Live Interactive Dashboard</div>
+            <div style="font-size:0.9rem; color:#94A3B8;">Click to explore full results — 10+ charts, heatmaps, per-task drill-down</div>
+            <div style="margin-top:10px; display:inline-block; padding:8px 24px; border:1px solid rgba(0,102,255,0.5); border-radius:8px; color:#60A5FA; font-weight:600; font-size:0.85rem;">zuwasi.github.io/quickswe-dashboard ↗</div>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <p class="small">Source: <a href="https://github.com/zuwasi/QuickSWE" style="color:#60A5FA;">github.com/zuwasi/QuickSWE</a> · <a href="https://zuwasi.github.io/quickswe-dashboard/" style="color:#60A5FA;">Live Dashboard ↗</a></p>
+</div>
+
+<!-- SLIDE 6: BENCHMARK 3 — ASSEMBLY / SIMD -->
+<div class="slide" id="slide-6">
+  <span class="tag green">Benchmark #3</span>
+  <h2>SIMD Assembly Optimization Challenge</h2>
+  <p class="subtitle" style="margin-bottom:20px;">Responding to Daniel Lemire's challenge — who generates the fastest low-level code?</p>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>🏎️ Ampcode AVX2 Results (x86-64)</h3>
+      <table>
+        <tr><th>Implementation</th><th>ns/string</th><th>Speedup</th></tr>
+        <tr><td>Classic C++ (<code>std::count</code> -O3)</td><td>67.05</td><td>1.00×</td></tr>
+        <tr><td>SSE2 intrinsics</td><td>39.26</td><td>1.71×</td></tr>
+        <tr><td>AVX2 intrinsics</td><td>33.97</td><td>1.97×</td></tr>
+        <tr><td class="win"><strong>AVX2 4-accumulator</strong></td><td class="win"><strong>30.91</strong></td><td class="win"><strong>2.17×</strong></td></tr>
+      </table>
+      <div class="highlight-box" style="margin-top:12px;">
+        <p style="font-size:0.9rem;">🔑 Ampcode <strong>out-optimized GCC 15.2's own SIMD vectorizer</strong> — the baseline was already using AVX2!</p>
+      </div>
+    </div>
+    <div class="card">
+      <h3>📊 Ampcode vs Claude/Grok (Lemire's)</h3>
+      <table>
+        <tr><th>Feature</th><th>Claude/Grok</th><th>Ampcode</th></tr>
+        <tr><td>Architecture</td><td>ARM64/NEON</td><td>x86-64/AVX2</td></tr>
+        <tr><td>Baseline</td><td>Scalar loop</td><td class="win">Already SIMD</td></tr>
+        <tr><td>Best Speedup</td><td>~8× (scalar→SIMD)</td><td class="win">2.17× (SIMD→SIMD)</td></tr>
+        <tr><td>AI Efficiency</td><td>Multiple rounds</td><td class="win">Single session</td></tr>
+        <tr><td>Max Unrolling</td><td>4-acc (64B)</td><td class="win">8-acc (128B)</td></tr>
+      </table>
+      <p style="margin-top:12px; font-size:0.85rem; color:#94A3B8;">Lemire beat a scalar baseline (easy win). <strong>Ampcode beat the compiler's own optimizer</strong> — a much harder challenge.</p>
+    </div>
+  </div>
+  <p class="small">Source: <a href="https://github.com/zuwasi/Ampcode_assembly_benchmark" style="color:#60A5FA;">Ampcode Assembly Benchmark Thread</a> · Platform: Intel Core Ultra 9 275HX (Arrow Lake)</p>
+</div>
+
+<!-- SLIDE 7: BENCHMARK 4 — COUNTERPOINT STUDY -->
+<div class="slide" id="slide-7">
+  <span class="tag green">Benchmark #4</span>
+  <h2>Counterpoint Study — Jay Framework Design Log #102</h2>
+  <p class="subtitle" style="margin-bottom:20px;">Reproducing Yoav Abrahami's methodology (Wix Engineering). Same task, same criteria — Ampcode replaces Cursor.</p>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>📋 Original Results (Yoav's Article)</h3>
+      <table>
+        <tr><th>Criterion</th><th>Claude Code</th><th>Cursor</th></tr>
+        <tr><td>Initial Planning</td><td>4/5</td><td class="win">5/5</td></tr>
+        <tr><td>Edge Case Handling</td><td>4/5</td><td class="win">5/5</td></tr>
+        <tr><td>Debugging & Iteration</td><td>3/5</td><td class="win">5/5</td></tr>
+        <tr><td>Testing Discipline</td><td>3/5</td><td class="win">5/5</td></tr>
+        <tr><td>Architectural Awareness</td><td>2/5</td><td class="win">5/5</td></tr>
+        <tr><td>Out-of-Scope Gaps</td><td>2/5</td><td class="win">5/5</td></tr>
+        <tr><td><strong>TOTAL</strong></td><td><strong>18/30</strong></td><td class="win"><strong>30/30</strong></td></tr>
+      </table>
+      <p style="margin-top:8px; font-size:0.85rem; color:#94A3B8;">Claude Code scored poorly against Cursor.</p>
+    </div>
+    <div class="card">
+      <h3>🎯 Our Study Design</h3>
+      <ul>
+        <li><strong>Identical task:</strong> Nested Headfull Full-Stack Components</li>
+        <li><strong>Identical methodology:</strong> Yoav's Design Log Methodology</li>
+        <li><strong>Identical evaluation:</strong> 6 criteria, scored 1-5 (max 30)</li>
+        <li><strong>Only change:</strong> Cursor → Ampcode</li>
+      </ul>
+      <div class="highlight-box" style="margin-top:16px;">
+        <p style="font-size:0.95rem;">Ampcode has the architectural advantages that made Cursor beat Claude Code: <strong>multi-model routing, sub-agents, and IDE-native intelligence</strong> — but in a CLI-first agent designed for enterprise teams.</p>
+      </div>
+      <p style="margin-top:12px; font-size:0.85rem;">Source: <a href="https://github.com/zuwasi/Counterpoint-to-Head-to-Yoav-s-head-Claude-Code-vs-Cursor.-Ampcode-vs-Claude-Code-" style="color:#60A5FA;">Counterpoint Study Repo</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8: PYTHON TO GO MIGRATION -->
+<div class="slide" id="slide-8">
+  <span class="tag green">Benchmark #5</span>
+  <h2>Python→Go Migration: Amp's Structural Advantages</h2>
+  <p class="subtitle" style="margin-bottom:20px;">Analysis of Winder.ai's Claude Code field report — how Amp solves each pain point.</p>
+  <table>
+    <tr><th>Problem (Claude Code)</th><th>Amp Solution</th><th>Why Amp Wins</th></tr>
+    <tr>
+      <td>Phantom features — dead code rebuilt</td>
+      <td>Call-graph pre-filter analysis</td>
+      <td class="win">Auto-skips dead symbols before migration</td>
+    </tr>
+    <tr>
+      <td>Context window blowup — missed endpoints</td>
+      <td>Parallel Task sub-agents</td>
+      <td class="win">One agent per endpoint, isolated context</td>
+    </tr>
+    <tr>
+      <td>Architectural drift — everything in <code>internal/</code></td>
+      <td>Scoped AGENTS.md per directory</td>
+      <td class="win">Enforces layout & import rules upfront</td>
+    </tr>
+    <tr>
+      <td>Dead code accumulation</td>
+      <td>Automated sweeps after every task</td>
+      <td class="win">Not manual "ask AI to check"</td>
+    </tr>
+    <tr>
+      <td>No integration tests during migration</td>
+      <td>tmux smoke tests at phase boundaries</td>
+      <td class="win">Spins up app, hits APIs, compares outputs</td>
+    </tr>
+    <tr>
+      <td>Stateless resumption (reads file each session)</td>
+      <td>Ralph skill with dependency tracking</td>
+      <td class="win">State-aware task progression</td>
+    </tr>
+  </table>
+  <div class="quote" style="margin-top:20px;">
+    "Where Claude Code often hits context window limits on cross-cutting tasks, Amp's Task tool can spawn parallel sub-agents — each handles one endpoint independently, preventing context window blowup."
+    <span class="source">— Analysis of Winder.ai's Python→Go migration field report</span>
+  </div>
+</div>
+
+<!-- SLIDE 9: SPEED COMPARISON -->
+<div class="slide" id="slide-9">
+  <span class="tag blue">Performance</span>
+  <h2>Speed: <span class="gradient">40× Faster</span> Cold Starts</h2>
+  <div class="grid grid-2" style="margin-top: 10px;">
+    <div class="card" style="text-align:center;">
+      <div class="big-number green" style="font-size:5rem;">1.3</div>
+      <div class="stat-label" style="font-size:1rem;">Ampcode — Minutes (avg)</div>
+      <p style="margin-top:12px; font-size:0.9rem; color:#CBD5E1;">Consistent 1.0–1.6 min across 3 cold starts</p>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div class="big-number red" style="font-size:5rem;">64</div>
+      <div class="stat-label" style="font-size:1rem;">Claude Code — Minutes</div>
+      <p style="margin-top:12px; font-size:0.9rem; color:#CBD5E1;">Single cold start on same K8s task</p>
+    </div>
+  </div>
+  <div class="grid grid-3" style="margin-top:20px;">
+    <div class="quote">
+      "It just solved one bug of mine in less than a minute where it took Claude 4.5 fifteen to twenty mins, with additional context needed."
+      <span class="source">— Reddit user, r/ClaudeAI</span>
+    </div>
+    <div class="quote">
+      "Same prompt in AMP and it completely nailed it with just one or two minor follow-up fixes. AMP completed almost the entire task in one go… 2-3× faster than Claude Code."
+      <span class="source">— Reddit user, r/ClaudeAI (Dark mode test)</span>
+    </div>
+    <div class="quote">
+      "No lost context. The result was a working app backed by a real database, with a full execution trail."
+      <span class="source">— Raja Rao DV, LinkedIn</span>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 10: MULTI-MODEL ADVANTAGE -->
+<div class="slide" id="slide-10">
+  <span class="tag blue">Architecture</span>
+  <h2>Multi-Model: The <span class="gradient">Unfair Advantage</span></h2>
+  <p class="subtitle">Claude Code is locked to one model family. Ampcode picks the best model for every sub-task.</p>
+  <div class="grid grid-3">
+    <div class="card" style="text-align:center; border-color: rgba(0,102,255,0.3);">
+      <h3>🧠 Main Agent</h3>
+      <div style="font-size:1.3rem; font-weight:700; color:#60A5FA; margin:12px 0;">Claude Opus 4.6</div>
+      <p>Primary code generation, editing, and reasoning</p>
+    </div>
+    <div class="card" style="text-align:center; border-color: rgba(16,185,129,0.3);">
+      <h3>🔮 Oracle</h3>
+      <div style="font-size:1.3rem; font-weight:700; color:#34D399; margin:12px 0;">GPT-5.4</div>
+      <p>Deep reasoning, code review, architecture decisions, debugging complex bugs</p>
+    </div>
+    <div class="card" style="text-align:center; border-color: rgba(251,191,36,0.3);">
+      <h3>⚡ Rush Mode</h3>
+      <div style="font-size:1.3rem; font-weight:700; color:#FBBF24; margin:12px 0;">Fast Models</div>
+      <p>Quick, well-defined tasks at lower cost and higher speed</p>
+    </div>
+  </div>
+  <div class="grid grid-2" style="margin-top:20px;">
+    <div class="card">
+      <h3>📚 Librarian Sub-agent</h3>
+      <p>Searches and reads <strong>all public + your private GitHub repos</strong>. Understands framework internals, library code, cross-repo dependencies — no copy-pasting documentation.</p>
+    </div>
+    <div class="card">
+      <h3>🎨 Painter + Skills + Toolboxes</h3>
+      <p>Image generation, custom skills (MISRA analysis, CVE lookup, Mathematica), MCP server integration, extensible toolbox system. Claude Code has none of this modularity.</p>
+    </div>
+  </div>
+  <div class="quote" style="margin-top:16px;">
+    "The multi-model switching point is underrated — predictability at scale matters more than benchmarks."
+    <span class="source">— Srishti Kashyap, LinkedIn (161K followers)</span>
+  </div>
+</div>
+
+<!-- SLIDE 11: TEAM FEATURES -->
+<div class="slide" id="slide-11">
+  <span class="tag blue">Enterprise</span>
+  <h2>Team-First: Built for <span class="gradient">Real Engineering Teams</span></h2>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>🧵 Shareable Threads</h3>
+      <ul>
+        <li>Every conversation saved and searchable</li>
+        <li>Share threads with teammates via URL</li>
+        <li>Learn from each other's agent interactions</li>
+        <li>Debug past sessions collaboratively</li>
+        <li>Include thread links in code reviews</li>
+      </ul>
+      <div class="quote" style="margin-top:12px;">
+        "I really like Amp's thread sharing… great for devs in a team to learn from each other."
+        <span class="source">— JackSpearow1521, Reddit</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3>🏢 Enterprise Features</h3>
+      <ul>
+        <li><strong>SSO</strong> — Okta, SAML directory sync</li>
+        <li><strong>Zero data retention</strong> for LLM inference</li>
+        <li><strong>Thread visibility controls</strong> per team</li>
+        <li><strong>Per-user cost controls</strong> (entitlements)</li>
+        <li><strong>MCP registry allowlists</strong></li>
+        <li><strong>Managed settings</strong> across workspace</li>
+        <li><strong>Analytics API</strong> with OpenAPI schema</li>
+        <li><strong>IP allowlisting</strong> for workspace access</li>
+      </ul>
+    </div>
+  </div>
+  <div class="highlight-box" style="margin-top:20px;">
+    <p style="font-size:1.1rem; text-align:center;">
+      <strong>Claude Code = Personal tool.</strong> &nbsp; <strong style="color:#60A5FA;">Ampcode = Team infrastructure.</strong>
+    </p>
+  </div>
+</div>
+
+<!-- SLIDE 12: COMMUNITY VOICES -->
+<div class="slide" id="slide-12">
+  <span class="tag blue">Community</span>
+  <h2>What Users Are Saying</h2>
+  <div class="grid grid-2" style="margin-top:10px;">
+    <div class="quote">
+      "I switched to AMP and don't look back. They somehow managed to use Anthropic's models in a way that works faster and smarter than Claude Code itself."
+      <span class="source">— Additional-Expert-21, Reddit r/ClaudeAI</span>
+    </div>
+    <div class="quote">
+      "Their TUI is exceptional — probably the best TUI on the market right now. Sub-agents work out of the box. All the complicated sub-agent stuff I've set up manually for Claude Code? It just comes ready to go."
+      <span class="source">— LLBBL Blog, First Impressions Review</span>
+    </div>
+    <div class="quote">
+      "AMP feels like it is optimized for how teams actually ship software. Especially when parallelism, traceability, and shared context matter more than flashy demos."
+      <span class="source">— Raja Rao DV, LinkedIn (tested end-to-end app build)</span>
+    </div>
+    <div class="quote">
+      "I sometimes use Amp when Claude fails to nail a bug. Amp usually does a great job because it also uses GPT-5 which is great for debugging."
+      <span class="source">— Dear-Tension7432, Reddit r/ClaudeAI</span>
+    </div>
+  </div>
+  <div class="highlight-box" style="margin-top:20px; text-align:center;">
+    <p style="font-size:1.1rem;"><strong>Recurring themes:</strong> Faster · Smarter model routing · Better sub-agents · Team collaboration · Superior CLI</p>
+  </div>
+</div>
+
+<!-- SLIDE 13: SCORECARD SUMMARY -->
+<div class="slide" id="slide-13">
+  <span class="tag green">Summary</span>
+  <h2>Head-to-Head Scorecard: <span class="gradient">All Benchmarks</span></h2>
+  <table style="font-size:1rem;">
+    <tr><th>Dimension</th><th style="text-align:center;">Ampcode</th><th style="text-align:center;">Claude Code</th><th style="text-align:center;">Winner</th></tr>
+    <tr><td>K8s Procurement Score</td><td style="text-align:center;" class="win">9.08</td><td style="text-align:center;">8.45</td><td style="text-align:center;" class="win">⚡ Ampcode</td></tr>
+    <tr><td>K8s Engineering Score</td><td style="text-align:center;">8.85</td><td style="text-align:center;">8.84</td><td style="text-align:center;" class="tie">≈ Tie</td></tr>
+    <tr><td>Repeatability (Cold Start)</td><td style="text-align:center;" class="win">9.9/10</td><td style="text-align:center;">6.8/10</td><td style="text-align:center;" class="win">⚡ Ampcode</td></tr>
+    <tr><td>Cold-Start Speed</td><td style="text-align:center;" class="win">1.3 min</td><td style="text-align:center;">64 min</td><td style="text-align:center;" class="win">⚡ Ampcode (40×)</td></tr>
+    <tr><td>SIMD Optimization</td><td style="text-align:center;" class="win">Beat compiler's SIMD</td><td style="text-align:center;">Beat scalar only</td><td style="text-align:center;" class="win">⚡ Ampcode</td></tr>
+    <tr><td>Cross-Provider Models</td><td style="text-align:center;" class="win">Opus + GPT-5.4 + Gemini</td><td style="text-align:center;">Anthropic only</td><td style="text-align:center;" class="win">⚡ Ampcode</td></tr>
+    <tr><td>Sub-Agent Architecture</td><td style="text-align:center;" class="win">Native + Oracle + Librarian</td><td style="text-align:center;">Explore/Plan/Custom</td><td style="text-align:center;" class="win">⚡ Ampcode</td></tr>
+    <tr><td>Team Thread History</td><td style="text-align:center;" class="win">Searchable + Shareable</td><td style="text-align:center;">Session-level only</td><td style="text-align:center;" class="win">⚡ Ampcode</td></tr>
+    <tr><td>Cross-Repo Intelligence</td><td style="text-align:center;" class="win">Librarian</td><td style="text-align:center;">None</td><td style="text-align:center;" class="win">⚡ Ampcode</td></tr>
+    <tr><td>Single-Run Patch Breadth</td><td style="text-align:center;">6 files</td><td style="text-align:center;" class="win">14 files</td><td style="text-align:center;" style="color:#FBBF24;">🟠 Claude</td></tr>
+  </table>
+  <div class="verdict" style="margin-top:20px;">
+    <h3 style="font-size:2rem;"><span class="gradient">Ampcode: 8 wins</span> · Claude Code: 1 win · 1 tie</h3>
+    <p style="color:#94A3B8; margin-top:8px;">Across all measured dimensions, Ampcode dominates.</p>
+  </div>
+</div>
+
+<!-- SLIDE 14: CONCLUSION -->
+<div class="slide" id="slide-14">
+  <div class="flex-center">
+    <span class="tag green">Conclusion</span>
+    <h1 style="font-size:3.4rem; margin-bottom:20px;">
+      <span class="gradient">Ampcode</span> is the<br>Enterprise Choice
+    </h1>
+    <div class="grid grid-3" style="max-width:900px; margin-top:30px;">
+      <div class="card" style="text-align:center;">
+        <div style="font-size:2.5rem;">⚡</div>
+        <h3>40× Faster</h3>
+        <p>Cold-start execution</p>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:2.5rem;">🎯</div>
+        <h3>9.9/10 Repeatable</h3>
+        <p>True cold-start consistency</p>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:2.5rem;">🧠</div>
+        <h3>Multi-Model</h3>
+        <p>Best model for every task</p>
+      </div>
+    </div>
+    <div style="margin-top:40px; max-width:800px;">
+      <p style="font-size:1.2rem; color:#CBD5E1; line-height:1.7; text-align:center;">
+        Claude Code is a capable solo tool. <strong style="color:#F1F5F9;">Ampcode is the frontier coding agent for engineering teams</strong> — faster, more repeatable, multi-model intelligent, team-collaborative, and provably safer.
+      </p>
+    </div>
+    <div style="margin-top:30px; display:flex; gap:30px;">
+      <a href="https://ampcode.com" style="color:#60A5FA; font-weight:600; font-size:1.1rem; text-decoration:none;">ampcode.com →</a>
+      <a href="https://github.com/zuwasi/Compare-Ampcode-Vs-Claudecode-on-a-real-Kubernetes-engineering-task" style="color:#60A5FA; font-weight:600; font-size:1.1rem; text-decoration:none;">K8s Benchmark →</a>
+      <a href="https://github.com/zuwasi/QuickSWE" style="color:#60A5FA; font-weight:600; font-size:1.1rem; text-decoration:none;">QuickSWE →</a>
+    </div>
+    <p class="small" style="margin-top:30px;">Daniel Liezrowice · ESL · April 2026</p>
+  </div>
+</div>
+
+<!-- NAVIGATION -->
+<div class="nav">
+  <button onclick="prevSlide()">◀</button>
+  <span class="slide-counter" id="counter">1 / 15</span>
+  <button onclick="nextSlide()">▶</button>
+</div>
+
+<script>
+  let current = 1;
+  const total = 14;
+  
+  function showSlide(n) {
+    document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+    document.getElementById('slide-' + n).classList.add('active');
+    document.getElementById('counter').textContent = n + ' / ' + total;
+    document.getElementById('progress').style.width = (n / total * 100) + '%';
+  }
+  
+  function nextSlide() { if (current < total) { current++; showSlide(current); } }
+  function prevSlide() { if (current > 1) { current--; showSlide(current); } }
+  
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+  });
+</script>
+
+</body>
+</html>
