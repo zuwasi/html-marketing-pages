@@ -9,6 +9,9 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { overflow: hidden; height: 100%; font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #0a0e1a; color: #e2e8f0; }
 
+  /* Confidential banner */
+  .conf-banner { position:fixed; top:0; left:0; width:100%; z-index:50; background:rgba(220,38,38,0.85); text-align:center; padding:5px 0; font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#fff; backdrop-filter:blur(4px); pointer-events:none; }
+
   /* Password overlay */
   .pw-overlay { position:fixed; inset:0; z-index:9999; background:#0a0e1a; display:flex; align-items:center; justify-content:center; }
   .pw-overlay.hidden { display:none; }
@@ -153,6 +156,8 @@
     <div class="pw-error" id="pwError"></div>
   </div>
 </div>
+
+<div class="conf-banner" id="confBanner" style="display:none;">⚠ Strictly Confidential — For Internal Discussion Only ⚠</div>
 
 <div class="slides-container" id="slidesContainer" style="display:none;">
 
@@ -632,6 +637,7 @@
   const progBar = document.querySelector('.progress-bar');
   const counter = document.getElementById('slideCounter');
   const hint = document.getElementById('swipeHint');
+  const confBanner = document.getElementById('confBanner');
 
   async function sha256(msg) {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
@@ -643,6 +649,7 @@
     if (h === HASH) {
       overlay.classList.add('hidden');
       slidesEl.style.display = 'flex';
+      confBanner.style.display = 'block';
       [navPrev, navNext, progBar, counter, hint].forEach(el => { if(el) el.style.visibility = 'visible'; });
     } else {
       pwError.textContent = 'Incorrect password';
