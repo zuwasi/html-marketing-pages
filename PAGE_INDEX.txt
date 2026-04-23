@@ -4,7 +4,7 @@
   Auto-updated on every commit via GitHub Actions
 ═══════════════════════════════════════════════════════════════
 
-Last updated: 2026-04-22
+Last updated: 2026-04-23
 
 ──────────────────────────────────────────────────────────────
   PAGE LINKS
@@ -73,19 +73,28 @@ Last updated: 2026-04-22
 21. ampcode-vs-claudecode-presentation.html
    https://zuwasi.github.io/Public-html-pages/ampcode-vs-claudecode-presentation.html
 
-22. cpp26-embedded-mavlink.html
+22. comparison-presentation-detailed.html
+   https://zuwasi.github.io/Public-html-pages/comparison-presentation-detailed.html
+
+23. comparison-presentation-executive.html
+   https://zuwasi.github.io/Public-html-pages/comparison-presentation-executive.html
+
+24. comparison-report.html
+   https://zuwasi.github.io/Public-html-pages/comparison-report.html
+
+25. cpp26-embedded-mavlink.html
    https://zuwasi.github.io/Public-html-pages/cpp26-embedded-mavlink.html
 
-23. cuda-to-axelera-migration.html
+26. cuda-to-axelera-migration.html
    https://zuwasi.github.io/Public-html-pages/cuda-to-axelera-migration.html
 
-24. nono-ampcode-presentation.html
+27. nono-ampcode-presentation.html
    https://zuwasi.github.io/Public-html-pages/nono-ampcode-presentation.html
 
-25. static-code-analysis-2026.html
+28. static-code-analysis-2026.html
    https://zuwasi.github.io/Public-html-pages/static-code-analysis-2026.html
 
-26. why-amp-doesnt-need-node9-proxy.html
+29. why-amp-doesnt-need-node9-proxy.html
    https://zuwasi.github.io/Public-html-pages/why-amp-doesnt-need-node9-proxy.html
 
 ──────────────────────────────────────────────────────────────
