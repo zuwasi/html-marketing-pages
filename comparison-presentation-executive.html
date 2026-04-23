@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Smart Speech Executive Comparison</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #16181e;
+    --muted: #5a6069;
+    --panel: rgba(255, 252, 247, 0.92);
+    --panel-strong: rgba(255, 248, 240, 0.98);
+    --line: rgba(22, 24, 30, 0.10);
+    --amp: #d96c31;
+    --amp-soft: rgba(217, 108, 49, 0.16);
+    --claude: #0f6f63;
+    --claude-soft: rgba(15, 111, 99, 0.16);
+    --warn: #b67722;
+    --alert: #ab342b;
+    --ok: #2a7648;
+    --shadow: 0 24px 64px rgba(79, 50, 26, 0.18);
+    --radius-xl: 28px;
+    --radius-lg: 20px;
+    --radius-md: 14px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html,
+  body {
+    margin: 0;
+    min-height: 100%;
+    overflow: hidden;
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(circle at 6% 14%, rgba(217, 108, 49, 0.20), transparent 24%),
+      radial-gradient(circle at 90% 10%, rgba(15, 111, 99, 0.18), transparent 22%),
+      linear-gradient(145deg, #fffaf3 0%, #f8f1e8 44%, #ecd8c2 100%);
+  }
+
+  body::before,
+  body::after {
+    content: '';
+    position: fixed;
+    border-radius: 999px;
+    pointer-events: none;
+    opacity: 0.28;
+    filter: blur(8px);
+  }
+
+  body::before {
+    width: 34vw;
+    height: 34vw;
+    left: -8vw;
+    bottom: -10vh;
+    background: rgba(217, 108, 49, 0.16);
+  }
+
+  body::after {
+    width: 26vw;
+    height: 26vw;
+    right: -5vw;
+    top: -8vh;
+    background: rgba(15, 111, 99, 0.16);
+  }
+
+  .slides {
+    display: flex;
+    width: calc(var(--slide-count) * 100vw);
+    transform: translateX(calc(var(--slide-index) * -100vw));
+    transition: transform 0.45s ease;
+    will-change: transform;
+  }
+
+  .slide {
+    width: 100vw;
+    height: 100vh;
+    flex: 0 0 100vw;
+    padding: clamp(24px, 4vw, 48px) clamp(20px, 4vw, 48px) 88px;
+  }
+
+  .frame {
+    width: 100%;
+    height: 100%;
+    padding: clamp(22px, 3vw, 38px);
+    border-radius: 34px;
+    background: linear-gradient(180deg, var(--panel-strong), var(--panel));
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    overflow: hidden;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    width: fit-content;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(22, 24, 30, 0.05);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.82rem;
+    font-weight: 800;
+  }
+
+  h1,
+  h2,
+  h3,
+  p { margin: 0; }
+
+  h1 {
+    font-size: clamp(2.6rem, 5vw, 4.9rem);
+    line-height: 0.94;
+    letter-spacing: -0.05em;
+  }
+
+  h2 {
+    font-size: clamp(1.5rem, 2.8vw, 2.5rem);
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  h3 {
+    font-size: clamp(1rem, 1.8vw, 1.26rem);
+    line-height: 1.1;
+  }
+
+  p,
+  li,
+  td,
+  th {
+    font-size: clamp(0.92rem, 1.15vw, 1.03rem);
+    line-height: 1.46;
+  }
+
+  .muted { color: var(--muted); }
+  .amp-text { color: var(--amp); }
+  .claude-text { color: var(--claude); }
+
+  .hero,
+  .two-col,
+  .three-col,
+  .four-col {
+    display: grid;
+    gap: 18px;
+  }
+
+  .hero { grid-template-columns: 1.35fr 1fr; flex: 1; }
+  .two-col { grid-template-columns: 1.15fr 1fr; }
+  .three-col { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .four-col { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+  .panel {
+    min-height: 0;
+    background: rgba(255, 255, 255, 0.70);
+    border: 1px solid rgba(22, 24, 30, 0.08);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+  }
+
+  .hero-copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 18px;
+  }
+
+  .lead {
+    max-width: 58ch;
+    color: var(--muted);
+    font-size: clamp(1rem, 1.45vw, 1.14rem);
+  }
+
+  .score-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  .score-card {
+    flex: 1 1 220px;
+    min-width: 0;
+    padding: 16px 18px;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, rgba(255,255,255,0.90), rgba(255,255,255,0.68));
+    border: 1px solid rgba(22, 24, 30, 0.08);
+  }
+
+  .score-label {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: var(--muted);
+  }
+
+  .score-value {
+    margin-top: 8px;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+  }
+
+  .summary-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 18px;
+    border-radius: 30px;
+    padding: 22px;
+    background:
+      linear-gradient(145deg, rgba(217,108,49,0.12), rgba(255,255,255,0.88)),
+      linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.72));
+    border: 1px solid rgba(217,108,49,0.18);
+  }
+
+  .pill,
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 0.86rem;
+    font-weight: 800;
+  }
+
+  .pill { background: rgba(22, 24, 30, 0.06); }
+  .tag.amp { background: var(--amp-soft); color: var(--amp); }
+  .tag.claude { background: var(--claude-soft); color: var(--claude); }
+  .tag.draw { background: rgba(22,24,30,0.08); }
+  .tag.warn { background: rgba(182,119,34,0.12); color: var(--warn); }
+  .tag.alert { background: rgba(171,52,43,0.12); color: var(--alert); }
+  .tag.ok { background: rgba(42,118,72,0.12); color: var(--ok); }
+
+  .winner-stack { display: grid; gap: 12px; }
+
+  .winner-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(22, 24, 30, 0.08);
+  }
+
+  .winner-row:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .metric-card,
+  .callout,
+  .issue {
+    padding: 14px 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(22, 24, 30, 0.08);
+    background: rgba(255,255,255,0.74);
+  }
+
+  .metric-card strong,
+  .issue strong {
+    display: block;
+    font-size: 1.18rem;
+    margin-bottom: 4px;
+  }
+
+  .callout-list,
+  .issue-list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .issue.good { background: rgba(42,118,72,0.08); border-color: rgba(42,118,72,0.18); }
+  .issue.warn { background: rgba(182,119,34,0.08); border-color: rgba(182,119,34,0.18); }
+  .issue.alert { background: rgba(171,52,43,0.08); border-color: rgba(171,52,43,0.18); }
+
+  .table-wrap {
+    background: rgba(255,255,255,0.72);
+    border: 1px solid rgba(22, 24, 30, 0.08);
+    border-radius: var(--radius-lg);
+    overflow: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    padding: 13px 15px;
+    border-bottom: 1px solid rgba(22, 24, 30, 0.08);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    background: rgba(22,24,30,0.05);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.8rem;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  .score-cell { min-width: 150px; }
+
+  .score-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+
+  .bar-track {
+    position: relative;
+    width: 100%;
+    height: 12px;
+    border-radius: 999px;
+    background: rgba(22, 24, 30, 0.08);
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    border-radius: inherit;
+  }
+
+  .bar-fill.amp { background: linear-gradient(90deg, rgba(217,108,49,0.94), rgba(217,108,49,0.56)); }
+  .bar-fill.claude { background: linear-gradient(90deg, rgba(15,111,99,0.94), rgba(15,111,99,0.56)); }
+
+  .duel-grid { display: grid; gap: 10px; }
+
+  .duel-row {
+    display: grid;
+    grid-template-columns: 88px 1fr 60px;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .duel-row span:last-child { text-align: right; font-weight: 800; }
+
+  .chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .chart-panel {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  svg { width: 100%; height: 100%; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; }
+  .legend-item { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 999px; }
+
+  .ref-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .ref-links a {
+    display: inline-flex;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(22, 24, 30, 0.06);
+    color: inherit;
+    text-decoration: none;
+    font-weight: 700;
+  }
+
+  .foot { color: var(--muted); font-size: 0.88rem; }
+
+  .nav-btn {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 58px;
+    height: 58px;
+    border: none;
+    border-radius: 999px;
+    background: rgba(255, 252, 247, 0.94);
+    color: var(--ink);
+    box-shadow: 0 12px 34px rgba(22,24,30,0.18);
+    cursor: pointer;
+    font-size: 2rem;
+    z-index: 20;
+  }
+
+  .nav-btn[hidden] { display: none; }
+  #prevBtn { left: 18px; }
+  #nextBtn { right: 18px; }
+
+  .progress {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 8px;
+    background: rgba(22,24,30,0.08);
+    z-index: 30;
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, var(--claude), var(--amp));
+    transition: width 0.35s ease;
+  }
+
+  .counter {
+    position: fixed;
+    right: 18px;
+    bottom: 16px;
+    z-index: 31;
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: rgba(255,252,247,0.94);
+    border: 1px solid rgba(22,24,30,0.08);
+    box-shadow: 0 10px 26px rgba(22,24,30,0.12);
+    font-weight: 800;
+  }
+
+  .swipe-hint {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    z-index: 31;
+    font-weight: 800;
+    color: var(--muted);
+    animation: nudge 2.2s ease-in-out infinite;
+    white-space: nowrap;
+  }
+
+  .swipe-hint.hidden { display: none; }
+
+  @keyframes nudge {
+    0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.68; }
+    50% { transform: translateX(-50%) translateY(-6px); opacity: 1; }
+  }
+
+  @media (max-width: 980px) {
+    .hero,
+    .two-col,
+    .three-col,
+    .four-col,
+    .chart-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .frame { overflow: auto; }
+    .slide { padding-bottom: 120px; }
+    .nav-btn { width: 52px; height: 52px; }
+  }
+</style>
+</head>
+<body>
+<div class="slides" id="slides" style="--slide-count: 5; --slide-index: 0;">
+  <section class="slide">
+    <div class="frame">
+      <div class="eyebrow">Executive Summary</div>
+      <div class="hero">
+        <div class="hero-copy">
+          <div>
+            <h1>Amp wins overall.<br>Claude leads maintainability.</h1>
+            <p class="lead">Based on the current code, Amp is the stronger overall implementation. Claude remains the cleaner engineering baseline for long-term ownership.</p>
+          </div>
+
+          <div class="score-cards">
+            <div class="score-card">
+              <div class="score-label">Current Overall Score</div>
+              <div class="score-value amp-text">72.8 / 100</div>
+              <p class="muted">Balanced toward current app strength, security, product completeness, and operational practicality.</p>
+            </div>
+            <div class="score-card">
+              <div class="score-label">Maintainability Lens</div>
+              <div class="score-value claude-text">74.4 / 100</div>
+              <p class="muted">Weighted toward architecture, code quality, observability, testability, and refactor safety.</p>
+            </div>
+          </div>
+
+          <div class="four-col">
+            <div class="metric-card">
+              <strong class="amp-text">Best Current App</strong>
+              Amp is the stronger app to demo, pilot, or compare as a product.
+            </div>
+            <div class="metric-card">
+              <strong class="claude-text">Best Code Shape</strong>
+              Claude is the easier codebase to reason about, refactor, and hand to another engineer.
+            </div>
+            <div class="metric-card">
+              <strong>Security Read</strong>
+              Amp edges ahead because Claude ships a hardcoded API key and weaker runtime defaults.
+            </div>
+            <div class="metric-card">
+              <strong>CVE Read</strong>
+              `pip-audit` found no known vulnerabilities in either Python requirements file.
+            </div>
+          </div>
+        </div>
+
+        <aside class="summary-card">
+          <div>
+            <div class="pill">Decision</div>
+            <h2>Use Amp as the current product reference. Use Claude as the architectural template.</h2>
+            <p class="muted">Amp is the stronger implementation today. Claude is the more maintainable starting point for a refactor or long-term team-owned codebase.</p>
+          </div>
+          <div class="winner-stack">
+            <div class="winner-row">
+              <div>
+                <h3>Overall Winner</h3>
+                <p class="muted">Feature depth plus a stronger security posture put Amp in first place.</p>
+              </div>
+              <span class="tag amp">Amp</span>
+            </div>
+            <div class="winner-row">
+              <div>
+                <h3>Maintainability Winner</h3>
+                <p class="muted">Smaller files, cleaner abstractions, and better logging keep Claude ahead here.</p>
+              </div>
+              <span class="tag claude">Claude</span>
+            </div>
+            <div class="winner-row">
+              <div>
+                <h3>Security Winner</h3>
+                <p class="muted">Amp wins narrowly on current code because Claude has a committed secret and weaker defaults.</p>
+              </div>
+              <span class="tag amp">Amp</span>
+            </div>
+          </div>
+          <div class="foot">This executive deck summarizes the current code comparison only.</div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="frame">
+      <div class="eyebrow">Why Amp Leads</div>
+      <div class="two-col" style="flex:1; min-height:0;">
+        <div class="panel">
+          <h2>Why Amp Ranks First</h2>
+          <div class="callout-list" style="margin-top: 12px;">
+            <div class="callout">TLS verification bypass is opt-in behind `ALLOW_INSECURE_MODEL_DOWNLOADS=1`.</div>
+            <div class="callout">CORS is configured from `ALLOWED_ORIGINS` instead of relying on a wildcard default.</div>
+            <div class="callout">Published-entry deletion enforces ownership checks.</div>
+            <div class="callout">Frontend modules use same-origin relative URLs instead of hardcoded remote backends.</div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>What Keeps Claude Competitive</h2>
+          <div class="issue-list" style="margin-top: 12px;">
+            <div class="issue good">
+              <strong>Cleaner architecture</strong>
+              Claude has the smaller, clearer server and shared frontend layers.
+            </div>
+            <div class="issue good">
+              <strong>Better observability style</strong>
+              Claude uses structured logging instead of mostly `print(...)`-based diagnostics.
+            </div>
+            <div class="issue alert">
+              <strong>But critical security debt remains</strong>
+              `run.bat` contains a hardcoded OpenAI API key, blank `APP_PASSWORD`, and the server keeps weaker CORS/auth defaults.
+            </div>
+          </div>
+          <div class="ref-links">
+            <a href="file:///C:/Amp_demos/smart-speech/server/server.py#L27-L30">Amp guarded TLS</a>
+            <a href="file:///C:/Amp_demos/smart-speech/server/server.py#L68-L81">Amp CORS</a>
+            <a href="file:///C:/Amp_demos/smart-speech/server/server.py#L646-L708">Amp delete checks</a>
+            <a href="file:///C:/Amp_demos/smart-speech/claude-version/run.bat#L13-L18">Claude hardcoded key</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="frame">
+      <div class="eyebrow">Scorecard</div>
+      <div class="two-col" style="flex:1; min-height:0;">
+        <div class="table-wrap">
+          <table id="scoreTable"></table>
+        </div>
+        <div class="three-col">
+          <div class="panel">
+            <h3>Balanced Lens</h3>
+            <p class="muted">Answers: which implementation is stronger overall?</p>
+            <div class="duel-grid" id="balancedLens" style="margin-top: 12px;"></div>
+          </div>
+          <div class="panel">
+            <h3>Maintainability Lens</h3>
+            <p class="muted">Answers: which codebase is healthier to evolve?</p>
+            <div class="duel-grid" id="maintainabilityLens" style="margin-top: 12px;"></div>
+          </div>
+          <div class="panel">
+            <h3>Executive Read</h3>
+            <div class="callout-list" style="margin-top: 12px;">
+              <div class="callout">Amp wins because its richer product scope outweighs the remaining security and structural debt.</div>
+              <div class="callout">Claude leads on engineering shape and maintainability.</div>
+              <div class="callout">This is a current-product winner versus long-term-structure winner split.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="frame">
+      <div class="eyebrow">Visuals</div>
+      <div class="chart-grid">
+        <div class="panel chart-panel">
+          <div>
+            <h2>Current Total Scores</h2>
+            <p class="muted">Balanced score chooses Amp. Maintainability score chooses Claude.</p>
+          </div>
+          <svg id="totalsChart" viewBox="0 0 420 360" preserveAspectRatio="xMidYMid meet" aria-label="Totals chart"></svg>
+        </div>
+        <div class="panel chart-panel">
+          <div>
+            <h2>Key Tradeoff Pattern</h2>
+            <p class="muted">Amp dominates product-facing criteria. Claude dominates code-health criteria.</p>
+          </div>
+          <svg id="tradeoffChart" viewBox="0 0 420 360" preserveAspectRatio="xMidYMid meet" aria-label="Tradeoff chart"></svg>
+          <div class="legend">
+            <div class="legend-item"><span class="legend-dot" style="background: var(--amp);"></span> Amp</div>
+            <div class="legend-item"><span class="legend-dot" style="background: var(--claude);"></span> Claude</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="frame">
+      <div class="eyebrow">Recommendation</div>
+      <div class="two-col" style="flex:1; min-height:0;">
+        <div class="panel">
+          <h2>Management Recommendation</h2>
+          <div class="issue-list" style="margin-top: 12px;">
+            <div class="issue good">
+              <strong>For demo, pilot, or product comparison</strong>
+              Choose Amp. It is the stronger current implementation.
+            </div>
+            <div class="issue good">
+              <strong>For long-term code stewardship</strong>
+              Use Claude as the model for how the code should eventually be organized.
+            </div>
+            <div class="issue warn">
+              <strong>Immediate action</strong>
+              Remove Claude's hardcoded API key and weak launcher defaults if that version remains in use.
+            </div>
+            <div class="issue warn">
+              <strong>Next engineering action</strong>
+              Reduce Amp's structural debt by splitting `server/server.py` and `static/common.js`, then add a small regression suite.
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Artifacts</h2>
+          <div class="callout-list" style="margin-top: 12px;">
+            <div class="callout">The report, markdown findings, and both presentation decks reflect the same comparison.</div>
+            <div class="callout">Detailed deck remains available for technical review.</div>
+            <div class="callout">Markdown findings match the same verdict and rationale.</div>
+          </div>
+          <div class="ref-links">
+            <a href="file:///C:/Amp_demos/smart-speech/comparison-report.html">Report</a>
+            <a href="file:///C:/Amp_demos/smart-speech/comparison-findings.md">Findings</a>
+            <a href="file:///C:/Amp_demos/smart-speech/comparison-presentation-detailed.html">Detailed deck</a>
+            <a href="file:///C:/Amp_demos/smart-speech/comparison-presentation-executive.html">Executive deck</a>
+          </div>
+          <div class="foot" style="margin-top: 14px;">Bottom line: Amp is the stronger product today. Claude is the stronger long-term code organization pattern.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<button class="nav-btn" id="prevBtn" aria-label="Previous slide" hidden>‹</button>
+<button class="nav-btn" id="nextBtn" aria-label="Next slide">›</button>
+<div class="counter" id="counter">1 / 5</div>
+<div class="swipe-hint" id="swipeHint">← Swipe to navigate →</div>
+<div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+
+<script>
+  const categories = [
+    { name: 'Feature Depth', weight: 18, amp: 9.3, claude: 6.8, winner: 'amp', note: 'Amp is materially more complete as a product.' },
+    { name: 'Security Posture', weight: 16, amp: 7.2, claude: 4.2, winner: 'amp', note: 'Amp scores higher because Claude ships a committed key and weaker defaults.' },
+    { name: 'Architecture / Modularity', weight: 11, amp: 5.9, claude: 8.5, winner: 'claude', note: 'Claude remains much cleaner structurally.' },
+    { name: 'Code Quality / Readability', weight: 10, amp: 6.2, claude: 8.4, winner: 'claude', note: 'Claude is easier to read and reason about.' },
+    { name: 'System Design / Flow', weight: 10, amp: 7.5, claude: 8.1, winner: 'claude', note: 'Claude’s flow is simpler; Amp’s is richer but more entangled.' },
+    { name: 'Runtime Efficiency', weight: 8, amp: 6.9, claude: 8.0, winner: 'claude', note: 'Claude is lighter at startup and in the browser.' },
+    { name: 'Deployability / Ops Readiness', weight: 7, amp: 7.6, claude: 5.7, winner: 'amp', note: 'Amp has safer defaults and a deployment manifest.' },
+    { name: 'Observability / Debuggability', weight: 5, amp: 5.3, claude: 7.8, winner: 'claude', note: 'Claude uses structured logging.' },
+    { name: 'Testability / Change Safety', weight: 4, amp: 4.6, claude: 6.3, winner: 'claude', note: 'Neither has tests, but Claude is safer to refactor.' },
+    { name: 'UX / Product Polish', weight: 6, amp: 9.2, claude: 6.4, winner: 'amp', note: 'Amp’s UI and task flows are more polished.' },
+    { name: 'CVE / Dependency Hygiene', weight: 5, amp: 6.9, claude: 6.7, winner: 'amp', note: 'Both passed pip-audit; current config posture gives Amp a slight edge.' }
+  ];
+
+  const balancedWeights = Object.fromEntries(categories.map((c) => [c.name, c.weight]));
+  const maintainabilityWeights = {
+    'Feature Depth': 2,
+    'Security Posture': 10,
+    'Architecture / Modularity': 20,
+    'Code Quality / Readability': 18,
+    'System Design / Flow': 16,
+    'Runtime Efficiency': 6,
+    'Deployability / Ops Readiness': 4,
+    'Observability / Debuggability': 10,
+    'Testability / Change Safety': 12,
+    'UX / Product Polish': 1,
+    'CVE / Dependency Hygiene': 1
+  };
+
+  function totalFor(version, weights) {
+    return categories.reduce((sum, cat) => sum + (cat[version] * weights[cat.name] / 100), 0);
+  }
+
+  const totals = {
+    balanced: {
+      amp: totalFor('amp', balancedWeights),
+      claude: totalFor('claude', balancedWeights)
+    },
+    maintainability: {
+      amp: totalFor('amp', maintainabilityWeights),
+      claude: totalFor('claude', maintainabilityWeights)
+    }
+  };
+
+  function renderScoreTable() {
+    const table = document.getElementById('scoreTable');
+    const rows = categories.map((cat) => `
+      <tr>
+        <td>
+          <strong>${cat.name}</strong><br>
+          <span class="muted">${cat.note}</span>
+        </td>
+        <td>${cat.weight}%</td>
+        <td class="score-cell">
+          <div class="score-top"><span class="amp-text">Amp</span><span>${cat.amp.toFixed(1)}</span></div>
+          <div class="bar-track"><div class="bar-fill amp" style="width:${cat.amp * 10}%"></div></div>
+        </td>
+        <td class="score-cell">
+          <div class="score-top"><span class="claude-text">Claude</span><span>${cat.claude.toFixed(1)}</span></div>
+          <div class="bar-track"><div class="bar-fill claude" style="width:${cat.claude * 10}%"></div></div>
+        </td>
+        <td><span class="tag ${cat.winner}">${cat.winner === 'amp' ? 'Amp' : 'Claude'}</span></td>
+      </tr>`).join('');
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th>Criterion</th>
+          <th>Weight</th>
+          <th>Amp</th>
+          <th>Claude</th>
+          <th>Winner</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>`;
+  }
+
+  function renderLens(elId, values) {
+    const el = document.getElementById(elId);
+    const winner = values.amp > values.claude ? 'Amp' : 'Claude';
+    el.innerHTML = `
+      <div class="duel-row">
+        <span class="amp-text">Amp</span>
+        <div class="bar-track"><div class="bar-fill amp" style="width:${values.amp * 10}%"></div></div>
+        <span>${(values.amp * 10).toFixed(1)}</span>
+      </div>
+      <div class="duel-row">
+        <span class="claude-text">Claude</span>
+        <div class="bar-track"><div class="bar-fill claude" style="width:${values.claude * 10}%"></div></div>
+        <span>${(values.claude * 10).toFixed(1)}</span>
+      </div>
+      <div class="callout"><strong>${winner}</strong> wins this lens.</div>
+    `;
+  }
+
+  function renderTotals() {
+    const svg = document.getElementById('totalsChart');
+    const bars = [
+      { label: 'Balanced / Amp', value: totals.balanced.amp * 10, color: 'rgba(217,108,49,0.94)' },
+      { label: 'Balanced / Claude', value: totals.balanced.claude * 10, color: 'rgba(15,111,99,0.94)' },
+      { label: 'Maintainability / Amp', value: totals.maintainability.amp * 10, color: 'rgba(217,108,49,0.94)' },
+      { label: 'Maintainability / Claude', value: totals.maintainability.claude * 10, color: 'rgba(15,111,99,0.94)' }
+    ];
+    const startX = 34;
+    const trackX = 182;
+    const topY = 58;
+    const width = 182;
+    const gap = 68;
+    const content = bars.map((bar, idx) => {
+      const y = topY + idx * gap;
+      const fill = width * (bar.value / 100);
+      return `
+        <text x="${startX}" y="${y}" font-size="14" font-weight="800" fill="#404651">${bar.label}</text>
+        <rect x="${trackX}" y="${y - 14}" width="${width}" height="22" rx="11" fill="rgba(22,24,30,0.08)" />
+        <rect x="${trackX}" y="${y - 14}" width="${fill}" height="22" rx="11" fill="${bar.color}" />
+        <text x="${trackX + width + 10}" y="${y + 2}" font-size="15" font-weight="800" fill="#16181e">${bar.value.toFixed(1)}</text>`;
+    }).join('');
+    svg.innerHTML = `
+      <rect width="420" height="360" rx="28" fill="rgba(255,255,255,0.30)"></rect>
+      <text x="34" y="28" font-size="18" font-weight="800" fill="#16181e">Total scores</text>
+      ${content}
+      <text x="34" y="324" font-size="14" fill="#5a6069">Amp wins the current-state lens. Claude wins the maintainability lens.</text>
+    `;
+  }
+
+  function renderTradeoff() {
+    const svg = document.getElementById('tradeoffChart');
+    const pairs = [
+      { label: 'Product', amp: 9.3, claude: 6.8 },
+      { label: 'Security', amp: 7.2, claude: 4.2 },
+      { label: 'Architecture', amp: 5.9, claude: 8.5 },
+      { label: 'Maintainability', amp: 6.4, claude: 7.9 }
+    ];
+    const startX = 34;
+    const baseY = 290;
+    const width = 320;
+    const left = 46;
+    const content = pairs.map((pair, idx) => {
+      const y = 56 + idx * 70;
+      const ampWidth = width * (pair.amp / 10);
+      const claudeWidth = width * (pair.claude / 10);
+      return `
+        <text x="${startX}" y="${y}" font-size="14" font-weight="800" fill="#404651">${pair.label}</text>
+        <rect x="${left}" y="${y + 10}" width="${width}" height="10" rx="5" fill="rgba(22,24,30,0.08)" />
+        <rect x="${left}" y="${y + 10}" width="${ampWidth}" height="10" rx="5" fill="rgba(217,108,49,0.94)" />
+        <rect x="${left}" y="${y + 26}" width="${width}" height="10" rx="5" fill="rgba(22,24,30,0.08)" />
+        <rect x="${left}" y="${y + 26}" width="${claudeWidth}" height="10" rx="5" fill="rgba(15,111,99,0.94)" />
+        <text x="${left + width + 8}" y="${y + 19}" font-size="13" font-weight="800" fill="#16181e">${pair.amp.toFixed(1)}</text>
+        <text x="${left + width + 8}" y="${y + 35}" font-size="13" font-weight="800" fill="#16181e">${pair.claude.toFixed(1)}</text>`;
+    }).join('');
+    svg.innerHTML = `
+      <rect width="420" height="360" rx="28" fill="rgba(255,255,255,0.30)"></rect>
+      <text x="34" y="28" font-size="18" font-weight="800" fill="#16181e">Tradeoff snapshot</text>
+      ${content}
+      <text x="34" y="328" font-size="14" fill="#5a6069">Orange bars: Amp. Green bars: Claude.</text>
+    `;
+  }
+
+  renderScoreTable();
+  renderLens('balancedLens', totals.balanced);
+  renderLens('maintainabilityLens', totals.maintainability);
+  renderTotals();
+  renderTradeoff();
+
+  const slides = document.querySelectorAll('.slide');
+  const slideRoot = document.getElementById('slides');
+  const counter = document.getElementById('counter');
+  const progressFill = document.getElementById('progressFill');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const swipeHint = document.getElementById('swipeHint');
+  let index = 0;
+  let touchStartX = null;
+  let dragStartX = null;
+  let hintDismissed = false;
+
+  function updateSlides() {
+    slideRoot.style.setProperty('--slide-index', index);
+    counter.textContent = `${index + 1} / ${slides.length}`;
+    progressFill.style.width = `${((index + 1) / slides.length) * 100}%`;
+    prevBtn.hidden = index === 0;
+    nextBtn.hidden = index === slides.length - 1;
+  }
+
+  function dismissHint() {
+    if (!hintDismissed) {
+      hintDismissed = true;
+      swipeHint.classList.add('hidden');
+    }
+  }
+
+  function goTo(next) {
+    const clamped = Math.max(0, Math.min(slides.length - 1, next));
+    if (clamped !== index) dismissHint();
+    index = clamped;
+    updateSlides();
+  }
+
+  prevBtn.addEventListener('click', () => goTo(index - 1));
+  nextBtn.addEventListener('click', () => goTo(index + 1));
+
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowRight' || event.key === ' ') {
+      event.preventDefault();
+      goTo(index + 1);
+    }
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      goTo(index - 1);
+    }
+  });
+
+  window.addEventListener('touchstart', (event) => {
+    touchStartX = event.changedTouches[0].clientX;
+  }, { passive: true });
+
+  window.addEventListener('touchend', (event) => {
+    if (touchStartX == null) return;
+    const delta = event.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(delta) > 50) goTo(index + (delta < 0 ? 1 : -1));
+    touchStartX = null;
+  }, { passive: true });
+
+  window.addEventListener('mousedown', (event) => {
+    dragStartX = event.clientX;
+  });
+
+  window.addEventListener('mouseup', (event) => {
+    if (dragStartX == null) return;
+    const delta = event.clientX - dragStartX;
+    if (Math.abs(delta) > 50) goTo(index + (delta < 0 ? 1 : -1));
+    dragStartX = null;
+  });
+
+  updateSlides();
+</script>
+</body>
+</html>
