@@ -4,7 +4,7 @@
   Auto-updated on every commit via GitHub Actions
 ═══════════════════════════════════════════════════════════════
 
-Last updated: 2026-04-23
+Last updated: 2026-04-26
 
 ──────────────────────────────────────────────────────────────
   PAGE LINKS
@@ -64,37 +64,40 @@ Last updated: 2026-04-23
 18. amp-deep3-vs-claude-opus47-benchmark.html
    https://zuwasi.github.io/Public-html-pages/amp-deep3-vs-claude-opus47-benchmark.html
 
-19. amp-vs-token-optimizer-presentation.html
+19. amp-lost-in-the-middle-presentation.html
+   https://zuwasi.github.io/Public-html-pages/amp-lost-in-the-middle-presentation.html
+
+20. amp-vs-token-optimizer-presentation.html
    https://zuwasi.github.io/Public-html-pages/amp-vs-token-optimizer-presentation.html
 
-20. ampcode-prompt-injection-immunity.html
+21. ampcode-prompt-injection-immunity.html
    https://zuwasi.github.io/Public-html-pages/ampcode-prompt-injection-immunity.html
 
-21. ampcode-vs-claudecode-presentation.html
+22. ampcode-vs-claudecode-presentation.html
    https://zuwasi.github.io/Public-html-pages/ampcode-vs-claudecode-presentation.html
 
-22. comparison-presentation-detailed.html
+23. comparison-presentation-detailed.html
    https://zuwasi.github.io/Public-html-pages/comparison-presentation-detailed.html
 
-23. comparison-presentation-executive.html
+24. comparison-presentation-executive.html
    https://zuwasi.github.io/Public-html-pages/comparison-presentation-executive.html
 
-24. comparison-report.html
+25. comparison-report.html
    https://zuwasi.github.io/Public-html-pages/comparison-report.html
 
-25. cpp26-embedded-mavlink.html
+26. cpp26-embedded-mavlink.html
    https://zuwasi.github.io/Public-html-pages/cpp26-embedded-mavlink.html
 
-26. cuda-to-axelera-migration.html
+27. cuda-to-axelera-migration.html
    https://zuwasi.github.io/Public-html-pages/cuda-to-axelera-migration.html
 
-27. nono-ampcode-presentation.html
+28. nono-ampcode-presentation.html
    https://zuwasi.github.io/Public-html-pages/nono-ampcode-presentation.html
 
-28. static-code-analysis-2026.html
+29. static-code-analysis-2026.html
    https://zuwasi.github.io/Public-html-pages/static-code-analysis-2026.html
 
-29. why-amp-doesnt-need-node9-proxy.html
+30. why-amp-doesnt-need-node9-proxy.html
    https://zuwasi.github.io/Public-html-pages/why-amp-doesnt-need-node9-proxy.html
 
 ──────────────────────────────────────────────────────────────
@@ -112,6 +115,9 @@ Last updated: 2026-04-23
 
 • agent-halflife-tester-guide.md
   https://zuwasi.github.io/Public-html-pages/agent-halflife-tester-guide.md
+
+• amp-logo-aaaa.png
+  https://zuwasi.github.io/Public-html-pages/amp-logo-aaaa.png
 
 • amp-logo.png
   https://zuwasi.github.io/Public-html-pages/amp-logo.png
