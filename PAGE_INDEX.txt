@@ -4,7 +4,7 @@
   Auto-updated on every commit via GitHub Actions
 ═══════════════════════════════════════════════════════════════
 
-Last updated: 2026-04-26
+Last updated: 2026-05-01
 
 ──────────────────────────────────────────────────────────────
   PAGE LINKS
@@ -91,13 +91,16 @@ Last updated: 2026-04-26
 27. cuda-to-axelera-migration.html
    https://zuwasi.github.io/Public-html-pages/cuda-to-axelera-migration.html
 
-28. nono-ampcode-presentation.html
+28. nesher2gm-pentest-operator-guide.html
+   https://zuwasi.github.io/Public-html-pages/nesher2gm-pentest-operator-guide.html
+
+29. nono-ampcode-presentation.html
    https://zuwasi.github.io/Public-html-pages/nono-ampcode-presentation.html
 
-29. static-code-analysis-2026.html
+30. static-code-analysis-2026.html
    https://zuwasi.github.io/Public-html-pages/static-code-analysis-2026.html
 
-30. why-amp-doesnt-need-node9-proxy.html
+31. why-amp-doesnt-need-node9-proxy.html
    https://zuwasi.github.io/Public-html-pages/why-amp-doesnt-need-node9-proxy.html
 
 ──────────────────────────────────────────────────────────────
